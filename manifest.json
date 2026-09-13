@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "bol.bar-pet",
+  "name": "Omarchy Bar Pet",
+  "version": "1.0.0",
+  "author": "bol",
+  "license": "MIT",
+  "description": "Reactive retro pixel art Bongo Cat desktop pet with typing and music animations",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Bar Pet",
+    "description": "Animated desktop pet that reacts to typing, music, system load, and clicks",
+    "category": "Custom",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "petName": "Archie",
+      "skin": "pixel_cat",
+      "typingReactive": true,
+      "audioReactive": true,
+      "soundEffects": true,
+      "idleSleepTimeout": 120,
+      "cpuHighThreshold": 75
+    },
+    "schema": [
+      {
+        "key": "petName",
+        "type": "string",
+        "label": "Pet Name",
+        "description": "Name shown in status tooltips and care drawer",
+        "defaultValue": "Archie"
+      },
+      {
+        "key": "skin",
+        "type": "string",
+        "label": "Pet Skin",
+        "description": "Visual theme (pixel_cat, classic_bongo, shiba, cyberpunk)",
+        "defaultValue": "pixel_cat"
+      },
+      {
+        "key": "typingReactive",
+        "type": "boolean",
+        "label": "Typing Reactivity",
+        "description": "Animate paws tapping when you type on the keyboard",
+        "defaultValue": true
+      },
+      {
+        "key": "audioReactive",
+        "type": "boolean",
+        "label": "Audio & Bongo Reactivity",
+        "description": "Drum on bongos and headbang when music is playing",
+        "defaultValue": true
+      },
+      {
+        "key": "soundEffects",
+        "type": "boolean",
+        "label": "Sound Effects",
+        "description": "Play subtle purr and snack sounds on interaction",
+        "defaultValue": true
+      },
+      {
+        "key": "idleSleepTimeout",
+        "type": "number",
+        "label": "Idle Sleep Timeout (seconds)",
+        "description": "Seconds of system inactivity before pet falls asleep",
+        "defaultValue": 120
+      },
+      {
+        "key": "cpuHighThreshold",
+        "type": "number",
+        "label": "CPU Stress Threshold (%)",
+        "description": "CPU load percentage above which pet sweats / stresses",
+        "defaultValue": 75
+      }
+    ]
+  }
+}
