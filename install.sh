@@ -28,9 +28,9 @@ rsync -av --delete \
   "$SCRIPT_DIR/" "$TARGET_DIR/"
 chmod +x "$TARGET_DIR/pet_watcher.py"
 
-echo "🐾 [4/5] Enabling plugin on the status bar..."
+echo "🐾 [4/5] Enabling plugin on the status bar (between weather and tray)..."
 if omarchy plugin list | grep -q "$PLUGIN_ID"; then
-  omarchy plugin enable "$PLUGIN_ID" --section right || true
+  omarchy plugin enable "$PLUGIN_ID" --section center --after omarchy.weather || true
 fi
 
 echo "🐾 [5/5] Reloading Omarchy shell..."
@@ -39,6 +39,6 @@ if command -v omarchy >/dev/null 2>&1; then
 fi
 
 echo "✨ Successfully installed ${PLUGIN_ID}!"
-echo "   - Left-click pet on the bar: Pet & Purr"
-echo "   - Right-click pet on the bar: Care & Wardrobe Drawer"
-echo "   - Keyboard shortcuts in drawer: [P] Pet, [F] Fish, [C] Coffee, [M] Milk, [1-4] Skins"
+echo "   - Left-click pet on the bar: Care Drawer"
+echo "   - Middle-click pet on the bar: Pet & Purr"
+echo "   - Keyboard shortcuts in drawer: [P] Pet, [F] Snack, [C] Coffee, [M] Milk, [1-4] Pets"

@@ -11,15 +11,17 @@ Item {
 
   // Settings & Configuration
   property string petName: "Archie"
-  property string skin: "pixel_cat"
+  property string animal: "cat" // "cat", "capy", "dog", "bunny"
+  property string skin: animal // Backwards compatibility
   property bool audioReactive: true
   property bool typingReactive: true
   property bool soundEffects: true
   property int idleSleepTimeout: 120
   property int cpuHighThreshold: 75
 
-  // Reactive State
-  property string currentState: "idle" // "idle", "typing_l", "typing_r", "bongo", "sleep", "sweat", "happy"
+  // Reactive State: "run", "music", "type", "sit", "sleep", "happy", "sweat"
+  property string currentState: "run"
+  property bool isRoaming: true
   property bool isTyping: false
   property string currentPaw: "l"
   property bool isMusicPlaying: false
@@ -38,18 +40,40 @@ Item {
   property int snackEnergyBonus: 0
   readonly property int energy: Math.min(100, Math.max(10, batteryPercent + snackEnergyBonus))
 
+  // Favorite snack metadata for active animal
+  readonly property var favoriteSnack: {
+    if (animal === "capy") return { id: "yuzu", name: "Yuzu", icon: "🍊", color: "#fab387" }
+    if (animal === "dog") return { id: "bone", name: "Bone", icon: "🦴", color: "#f9e2af" }
+    if (animal === "bunny") return { id: "carrot", name: "Carrot", icon: "🥕", color: "#fab387" }
+    return { id: "fish", name: "Fish", icon: "🐟", color: "#50c8ff" }
+  }
+
   // Mood description
   readonly property string moodText: {
-    if (isHappy) return "Purring happily ♥"
+    if (isHappy) {
+      if (animal === "capy") return "Zen happiness ♥"
+      if (animal === "dog") return "Tail wagging excitedly! ♥"
+      if (animal === "bunny") return "Happy bunny binkies! ♥"
+      return "Purring happily ♥"
+    }
     if (coffeeActive) return "Hyper caffeine zoomies! ⚡"
     if (isSleeping) return "Napping peacefully zZz"
     if (isMusicPlaying && audioReactive) {
-      if (musicTitle !== "") return "Jamming to " + musicTitle
-      return "Drumming to the beat ♫"
+      if (musicTitle !== "") return "Jamming with headphones to " + musicTitle + " ♫"
+      return "Grooving to the music with headphones ♫"
     }
-    if (isTyping && typingReactive) return "Coding frenzy!"
+    if (isTyping && typingReactive) return "Coding frenzy on laptop!"
     if (isHeavyLoad) return "Puffing / High CPU load!"
-    return "Vibing quietly"
+    if (currentState === "run") {
+      if (animal === "capy") return "Waddling calmly with yuzu 🍊"
+      if (animal === "dog") return "Trotting happily along runway 🐾"
+      if (animal === "bunny") return "Hopping along the runway 🐇"
+      return "Prowling along the bar 🐾"
+    }
+    if (animal === "capy") return "Resting calmly"
+    if (animal === "dog") return "Sitting attentively"
+    if (animal === "bunny") return "Sitting cute & alert"
+    return "Sitting elegantly"
   }
 
   signal petInteraction(string type)
@@ -63,7 +87,7 @@ Item {
     Quickshell.execDetached(["pw-play", path])
   }
 
-  // Pet action (Left Click)
+  // Pet action (Left / Middle Click)
   function pet() {
     isSleeping = false
     isHappy = true
@@ -77,12 +101,13 @@ Item {
   function feed(snack) {
     isSleeping = false
     playSound("snack")
-    if (snack === "fish") {
+
+    if (snack === "favorite" || snack === "fish" || snack === "yuzu" || snack === "bone" || snack === "carrot") {
       snackEnergyBonus = Math.min(30, snackEnergyBonus + 15)
       isHappy = true
       happyTimer.restart()
-      particleTrigger("🐟", "#50c8ff")
-      petInteraction("fish")
+      particleTrigger(favoriteSnack.icon, favoriteSnack.color)
+      petInteraction(favoriteSnack.id)
     } else if (snack === "coffee") {
       coffeeActive = true
       coffeeTimer.restart()
@@ -98,9 +123,32 @@ Item {
     }
   }
 
-  function setSkin(newSkin) {
-    root.skin = newSkin
+  function setAnimal(newAnimal) {
+    root.animal = newAnimal
+    root.skin = newAnimal
     playSound("click")
+  }
+
+  function rename(newName) {
+    var clean = String(newName || "").trim()
+    if (!clean) return
+    root.petName = clean
+    playSound("click")
+  }
+
+  function setSkin(newSkin) {
+    // Map skins to animals if needed
+    if (newSkin === "pixel_cat" || newSkin === "classic_bongo" || newSkin === "cyberpunk" || newSkin === "cat") {
+      setAnimal("cat")
+    } else if (newSkin === "capy" || newSkin === "capybara") {
+      setAnimal("capy")
+    } else if (newSkin === "shiba" || newSkin === "dog") {
+      setAnimal("dog")
+    } else if (newSkin === "bunny" || newSkin === "rabbit") {
+      setAnimal("bunny")
+    } else {
+      setAnimal("cat")
+    }
   }
 
   // Evaluate current state based on all system signals
@@ -114,31 +162,43 @@ Item {
       return
     }
     if (coffeeActive) {
-      currentState = (currentPaw === "l" ? "typing_l" : "typing_r")
+      currentState = "type"
       return
     }
     if (typingReactive && isTyping) {
-      currentState = (currentPaw === "l" ? "typing_l" : "typing_r")
+      currentState = "type"
       return
     }
     if (audioReactive && isMusicPlaying) {
-      currentState = "bongo"
+      currentState = "music"
       return
     }
     if (isHeavyLoad) {
       currentState = "sweat"
       return
     }
-    currentState = "idle"
+    currentState = isRoaming ? "run" : "sit"
   }
 
   onIsHappyChanged: updateCurrentState()
   onIsSleepingChanged: updateCurrentState()
   onCoffeeActiveChanged: updateCurrentState()
   onIsTypingChanged: updateCurrentState()
-  onCurrentPawChanged: updateCurrentState()
   onIsMusicPlayingChanged: updateCurrentState()
   onIsHeavyLoadChanged: updateCurrentState()
+  onIsRoamingChanged: updateCurrentState()
+
+  // Roaming & Rest Cycle Timer (Alternates roaming and sitting when idle)
+  Timer {
+    id: roamCycleTimer
+    interval: root.isRoaming ? 12000 : 6000
+    repeat: true
+    running: !root.isSleeping && !root.isMusicPlaying && !root.isTyping && !root.coffeeActive
+    onTriggered: {
+      root.isRoaming = !root.isRoaming
+      interval = root.isRoaming ? (10000 + Math.random() * 6000) : (5000 + Math.random() * 4000)
+    }
+  }
 
   // State Decay Timers
   Timer {
@@ -177,18 +237,6 @@ Item {
     repeat: false
     onTriggered: {
       root.isSleeping = false
-    }
-  }
-
-  // Coffee jitter timer (alternates paws rapidly when hyper)
-  Timer {
-    id: coffeeJitterTimer
-    interval: 120
-    repeat: true
-    running: root.coffeeActive
-    onTriggered: {
-      root.currentPaw = (root.currentPaw === "l" ? "r" : "l")
-      root.isTyping = true
     }
   }
 

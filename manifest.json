@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "bol.bar-pet",
   "name": "Omarchy Bar Pet",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "bol",
   "license": "MIT",
-  "description": "Reactive retro pixel art Bongo Cat desktop pet with typing and music animations",
+  "description": "Minimalist vector animated desktop pet with 4 animals (Cat, Capybara, Shiba, Bunny) roaming on an adaptive status bar runway with music headphones, typing, and care interactions",
   "kinds": [
     "bar-widget"
   ],
@@ -14,13 +14,16 @@
   },
   "barWidget": {
     "displayName": "Bar Pet",
-    "description": "Animated desktop pet that reacts to typing, music, system load, and clicks",
+    "description": "Animated desktop pet roaming on an adaptive topbar runway, reacting to music, typing, system load, and clicks",
     "category": "Custom",
     "allowMultiple": false,
-    "defaultSection": "right",
+    "defaultSection": "center",
     "defaults": {
       "petName": "Archie",
-      "skin": "pixel_cat",
+      "animal": "cat",
+      "runwayMode": "auto",
+      "runwayWidth": 160,
+      "maxRunwayWidth": 0,
       "typingReactive": true,
       "audioReactive": true,
       "soundEffects": true,
@@ -36,31 +39,52 @@
         "defaultValue": "Archie"
       },
       {
-        "key": "skin",
+        "key": "animal",
         "type": "string",
-        "label": "Pet Skin",
-        "description": "Visual theme (pixel_cat, classic_bongo, shiba, cyberpunk)",
-        "defaultValue": "pixel_cat"
+        "label": "Animal Character",
+        "description": "Selected animal (cat: Cat, capy: Capybara with Yuzu, dog: Shiba Inu, bunny: Bunny)",
+        "defaultValue": "cat"
+      },
+      {
+        "key": "runwayMode",
+        "type": "string",
+        "label": "Runway Mode",
+        "description": "Runway layout behavior (auto: adaptive between center & right modules, fixed, compact: icon button)",
+        "defaultValue": "auto"
+      },
+      {
+        "key": "runwayWidth",
+        "type": "number",
+        "label": "Fixed Runway Width (px)",
+        "description": "Runway track width when using fixed mode",
+        "defaultValue": 160
+      },
+      {
+        "key": "maxRunwayWidth",
+        "type": "number",
+        "label": "Max Adaptive Runway Width (px)",
+        "description": "Maximum width for the runway in auto adaptive mode (0 = dynamically fill gap to tray <)",
+        "defaultValue": 0
       },
       {
         "key": "typingReactive",
         "type": "boolean",
         "label": "Typing Reactivity",
-        "description": "Animate paws tapping when you type on the keyboard",
+        "description": "Animate mini laptop & paws tapping when you type on the keyboard",
         "defaultValue": true
       },
       {
         "key": "audioReactive",
         "type": "boolean",
-        "label": "Audio & Bongo Reactivity",
-        "description": "Drum on bongos and headbang when music is playing",
+        "label": "Audio & Music Reactivity",
+        "description": "Wear glowing headphones and groove to the beat when music is playing",
         "defaultValue": true
       },
       {
         "key": "soundEffects",
         "type": "boolean",
         "label": "Sound Effects",
-        "description": "Play subtle purr and snack sounds on interaction",
+        "description": "Play subtle purr, snack, and click sounds on interaction",
         "defaultValue": true
       },
       {

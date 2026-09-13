@@ -9,19 +9,50 @@ BarWidget {
   moduleName: "bol.bar-pet"
 
   readonly property string configuredPetName: String(setting("petName", "Archie"))
-  readonly property string configuredSkin: String(setting("skin", "pixel_cat"))
+  readonly property string configuredAnimal: String(setting("animal", setting("skin", "capy")))
+  readonly property string configuredRunwayMode: String(setting("runwayMode", "auto")) // "auto", "fixed", "compact"
+  readonly property int configuredRunwayWidth: Number(setting("runwayWidth", 160))
+  readonly property int configuredMaxRunwayWidth: Number(setting("maxRunwayWidth", 0))
   readonly property bool configuredAudioReactive: Boolean(setting("audioReactive", true))
   readonly property bool configuredTypingReactive: Boolean(setting("typingReactive", true))
   readonly property bool configuredSoundEffects: Boolean(setting("soundEffects", true))
   readonly property int configuredIdleSleepTimeout: Number(setting("idleSleepTimeout", 120))
   readonly property int configuredCpuHighThreshold: Number(setting("cpuHighThreshold", 75))
 
-  property string activeSkin: configuredSkin
+  property string activePetName: configuredPetName
+  onConfiguredPetNameChanged: activePetName = configuredPetName
+
+  property string activeAnimal: configuredAnimal
+  onConfiguredAnimalChanged: activeAnimal = configuredAnimal
+
+  function persistSetting(name, value) {
+    var entry = { id: root.moduleName }
+    for (var existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
+    entry[name] = value
+    root.settings = entry
+    if (root.bar && root.bar.shell && typeof root.bar.shell.updateEntryInline === "function") {
+      root.bar.shell.updateEntryInline(root.moduleName, entry)
+    }
+  }
+
+  function setName(name) {
+    var clean = String(name || "").trim()
+    if (!clean) return
+    root.activePetName = clean
+    petService.rename(clean)
+    root.persistSetting("petName", clean)
+  }
+
+  function setAnimal(name) {
+    root.activeAnimal = name
+    petService.setAnimal(name)
+    root.persistSetting("animal", name)
+  }
 
   PetService {
     id: petService
-    petName: root.configuredPetName
-    skin: root.activeSkin
+    petName: root.activePetName
+    animal: root.activeAnimal
     audioReactive: root.configuredAudioReactive
     typingReactive: root.configuredTypingReactive
     soundEffects: root.configuredSoundEffects
@@ -39,12 +70,29 @@ BarWidget {
   readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false
   readonly property bool popoutSwitchClosing: panelLoader.item ? panelLoader.item.popoutSwitchClosing === true : false
 
-  function open() { if (panelLoader.item) panelLoader.item.open() }
-  function close() { if (panelLoader.item) panelLoader.item.close() }
-  function togglePanel() { if (panelLoader.item) panelLoader.item.toggle() }
-  function closeForPopoutSwitch() { if (panelLoader.item) panelLoader.item.closeForPopoutSwitch() }
+  function open() {
+    if (panelLoader.item && panelLoader.item.open) panelLoader.item.open()
+  }
+  function close() {
+    if (panelLoader.item && panelLoader.item.close) panelLoader.item.close()
+  }
+  function togglePanel() {
+    if (panelLoader.item && panelLoader.item.toggle) panelLoader.item.toggle()
+  }
+  function closeForPopoutSwitch() {
+    if (panelLoader.item && panelLoader.item.closeForPopoutSwitch) panelLoader.item.closeForPopoutSwitch()
+  }
 
-  readonly property real openPanelIndicatorWidth: button.slotSize
+  // Omarchy bar click router delegates through triggerPress
+  function triggerPress(b) {
+    if (b === Qt.MiddleButton) {
+      petService.pet()
+    } else {
+      root.togglePanel()
+    }
+  }
+
+  readonly property real openPanelIndicatorWidth: Style.space(38)
   readonly property real openPanelIndicatorHeight: Math.max(Style.space(10), Math.round(Style.bar.iconSlot * 0.55))
 
   function injectPanel() {
@@ -80,117 +128,257 @@ BarWidget {
     function toggle(): void { root.togglePanel() }
     function pet(): void { petService.pet() }
     function feed(snack: string): void { petService.feed(snack) }
-    function setSkin(name: string): void {
-      root.activeSkin = name
-      petService.setSkin(name)
-    }
+    function setName(name: string): void { root.setName(name) }
+    function setAnimal(name: string): void { root.setAnimal(name) }
+    function setSkin(name: string): void { root.setAnimal(name) }
     function status(): string {
       return JSON.stringify({
         name: petService.petName,
-        skin: petService.skin,
+        animal: petService.animal,
         state: petService.currentState,
         mood: petService.moodText,
         energy: petService.energy,
         cpu: petService.cpuPercent,
         isTyping: petService.isTyping,
         isMusic: petService.isMusicPlaying,
-        isSleeping: petService.isSleeping
+        isSleeping: petService.isSleeping,
+        width: root.width,
+        targetWidth: root.targetRunwayWidth,
+        gap: root.dynamicAvailableGap,
+        trayLeft: root.trayLeftEdge,
+        petStartX: root.petStartX,
+        rmWidth: root.rightModulesWidth
       })
     }
   }
 
+  property bool interactive: true
+  property bool pressable: true
+  property bool concealed: false
+
   function buildTooltip() {
-    var s = "🐾 " + petService.petName + " (" + petService.skin + ")\n"
+    var s = "🐾 " + petService.petName + " (" + petService.animal.toUpperCase() + ")\n"
     s += "Mood: " + petService.moodText + "\n"
     s += "Energy: " + petService.energy + "%\n"
-    s += "Click: Care & Wardrobe Popover | Middle-Click: Quick Pet"
+    s += "Left-Click: Care Drawer | Middle-Click: Pet & Purr"
     return s
   }
 
+  // ===========================================================================
+  // DYNAMIC ADAPTIVE RUNWAY SIZING MATH
+  // Positioned in center section right after omarchy.weather, extending towards
+  // RightModules which starts with omarchy.tray (<)
+  // ===========================================================================
+  readonly property var anchorWindow: (root.Window && root.Window.window) ? root.Window.window : null
+  readonly property real windowWidth: anchorWindow ? anchorWindow.width : 1920
+
+  TransformWatcher {
+    id: layoutWatcher
+    a: anchorWindow ? anchorWindow.contentItem : null
+    b: root
+  }
+
+  // Walk up to find RightModules (anchored to right of bar)
+  function findRightModules() {
+    var p = root.parent
+    while (p) {
+      if (p.children) {
+        for (var i = 0; i < p.children.length; i++) {
+          var c = p.children[i]
+          if (c && c.region === "right") {
+            return c
+          }
+        }
+      }
+      p = p.parent
+    }
+    return null
+  }
+
+  property var rightModulesItem: null
+
+  function updateRightModulesRef() {
+    if (!rightModulesItem) {
+      rightModulesItem = findRightModules()
+    }
+  }
+
+  Component.onCompleted: {
+    Qt.callLater(updateRightModulesRef)
+  }
+
+  Timer {
+    interval: 1000
+    repeat: true
+    running: !root.rightModulesItem
+    onTriggered: updateRightModulesRef()
+  }
+
+  // Width of all right modules (tray, tailscale, audio, wifi, battery, etc.)
+  readonly property real rightModulesWidth: {
+    var rm = rightModulesItem
+    if (!rm) return Style.space(160)
+    return rm.width > 0 ? rm.width : (rm.implicitWidth || Style.space(160))
+  }
+
+  // Left boundary of the expand widget (<) / tray on the right
+  readonly property real trayLeftEdge: windowWidth - Style.space(8) - rightModulesWidth
+
+  // Our screen X position (starts right after omarchy.weather)
+  readonly property real petStartX: {
+    layoutWatcher.transform
+    if (!anchorWindow || !anchorWindow.contentItem) return (windowWidth / 2) + Style.space(150)
+    try {
+      var pt = root.mapToItem(anchorWindow.contentItem, 0, 0)
+      if (pt && pt.x > 0) return pt.x
+    } catch (e) {}
+    return (windowWidth / 2) + Style.space(150)
+  }
+
+  // Available gap between weather right edge and tray left edge (<)
+  readonly property real dynamicAvailableGap: Math.max(Style.space(64), trayLeftEdge - petStartX - Style.space(10))
+
+  readonly property real targetRunwayWidth: {
+    if (configuredRunwayMode === "compact") return Style.bar.iconSlot
+    if (configuredRunwayMode === "fixed") return configuredRunwayWidth
+    // Flexible adaptive mode: fills the space between weather and tray (<)
+    // If configuredMaxRunwayWidth is set above 0, it acts as an upper cap; otherwise fills the gap
+    if (configuredMaxRunwayWidth > 0) return Math.min(configuredMaxRunwayWidth, dynamicAvailableGap)
+    return dynamicAvailableGap
+  }
+
   visible: true
-  implicitWidth: visible ? button.implicitWidth : 0
-  implicitHeight: visible ? button.implicitHeight : 0
+  implicitWidth: visible ? targetRunwayWidth : 0
+  implicitHeight: visible ? Style.bar.sizeHorizontal : 0
   width: implicitWidth
   height: implicitHeight
 
-  BarIconButton {
+  Behavior on implicitWidth {
+    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+  }
+
+  // ===========================================================================
+  // ROAMING PHYSICS ALONG THE RUNWAY
+  // ===========================================================================
+  property real petX: Style.space(6)
+  property bool facingRight: true
+  readonly property real petSlotWidth: Style.space(40)
+  readonly property real maxPetX: Math.max(0, root.width - petSlotWidth - Style.space(4))
+
+  onMaxPetXChanged: {
+    if (petX > maxPetX) petX = maxPetX
+  }
+
+  // 60 FPS Roaming Movement Timer
+  Timer {
+    id: roamTimer
+    interval: 16 // 60 FPS
+    running: petService.currentState === "run" && root.maxPetX > Style.space(8)
+    repeat: true
+    onTriggered: {
+      var speed = 0.75
+      if (root.facingRight) {
+        root.petX += speed
+        if (root.petX >= root.maxPetX) {
+          root.petX = root.maxPetX
+          root.facingRight = false
+        }
+      } else {
+        root.petX -= speed
+        if (root.petX <= Style.space(2)) {
+          root.petX = Style.space(2)
+          root.facingRight = true
+        }
+      }
+    }
+  }
+
+  // ===========================================================================
+  // INTERACTIVE WIDGET BUTTON & VISUAL RUNWAY
+  // Built with WidgetButton to register as click target in Omarchy Bar
+  // ===========================================================================
+  WidgetButton {
     id: button
     anchors.fill: parent
     bar: root.bar
     tooltipText: root.buildTooltip()
+    hasVisualContent: true
+    labelVisible: false
+    fixedWidth: root.width
+    fixedHeight: root.height
 
     onPressed: function(b) {
       if (b === Qt.MiddleButton) {
         petService.pet()
       } else {
-        // Both Left-click and Right-click open the popover drawer!
         root.togglePanel()
       }
     }
 
-    iconComponent: Component {
-      Item {
-        anchors.fill: parent
+    // Runway Content inside WidgetButton
+    Item {
+      anchors.fill: parent
 
-        // Pixel Art Sprite
-        Image {
-          id: spriteImg
-          anchors.centerIn: parent
-          width: Style.space(26)
-          height: Style.space(26)
-          smooth: false // CRITICAL for razor-sharp retro pixel art
-          mipmap: false
-          fillMode: Image.PreserveAspectFit
-          source: Qt.resolvedUrl("assets/sprites/" + petService.skin + "/" + petService.currentState + ".png")
+      // Active Drawer Indicator dot/pill when open
+      Rectangle {
+        visible: root.opened
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Style.space(1)
+        x: root.petX + (petSlotWidth / 2) - (width / 2)
+        width: Style.space(16)
+        height: 2
+        radius: 1
+        color: Color.accent
+      }
 
-          SequentialAnimation on y {
-            running: petService.currentState === "idle"
-            loops: Animation.Infinite
-            NumberAnimation { to: -1; duration: 900; easing.type: Easing.InOutSine }
-            NumberAnimation { to: 0; duration: 900; easing.type: Easing.InOutSine }
+      // Main Vector Pet Renderer
+      PetRenderer {
+        id: petRenderer
+        width: Style.space(42)
+        height: Style.space(26)
+        anchors.verticalCenter: parent.verticalCenter
+        x: root.petX
+
+        animal: petService.animal
+        state: petService.currentState
+        facingLeft: !root.facingRight
+        strokeColor: root.bar ? root.bar.barForeground : Color.accent
+      }
+
+      // Floating Interaction Particle (Hearts ♥, Snacks, Notes)
+      Text {
+        id: floatingParticle
+        x: root.petX + (petSlotWidth / 2) - (implicitWidth / 2)
+        y: parent.height * 0.2
+        text: "♥"
+        font.pixelSize: Style.font.caption
+        opacity: 0.0
+
+        ParallelAnimation {
+          id: particleAnim
+          NumberAnimation {
+            target: floatingParticle
+            property: "y"
+            from: parent.height * 0.3
+            to: -Style.space(12)
+            duration: 900
+            easing.type: Easing.OutCubic
           }
-
-          scale: petService.isHappy ? 1.08 : 1.0
-          Behavior on scale {
-            NumberAnimation { duration: 150; easing.type: Easing.OutBack }
-          }
-        }
-
-        // Floating Particle Overlay
-        Text {
-          id: floatingParticle
-          anchors.horizontalCenter: parent.horizontalCenter
-          y: parent.height * 0.2
-          text: "♥"
-          font.pixelSize: Style.font.caption
-          opacity: 0.0
-
-          ParallelAnimation {
-            id: particleAnim
+          SequentialAnimation {
             NumberAnimation {
               target: floatingParticle
-              property: "y"
-              from: parent.height * 0.3
-              to: -Style.space(12)
-              duration: 900
-              easing.type: Easing.OutCubic
+              property: "opacity"
+              from: 0.0
+              to: 1.0
+              duration: 150
             }
-            SequentialAnimation {
-              NumberAnimation {
-                target: floatingParticle
-                property: "opacity"
-                from: 0.0
-                to: 1.0
-                duration: 150
-              }
-              PauseAnimation { duration: 400 }
-              NumberAnimation {
-                target: floatingParticle
-                property: "opacity"
-                from: 1.0
-                to: 0.0
-                duration: 350
-              }
+            PauseAnimation { duration: 450 }
+            NumberAnimation {
+              target: floatingParticle
+              property: "opacity"
+              from: 1.0
+              to: 0.0
+              duration: 350
             }
           }
         }

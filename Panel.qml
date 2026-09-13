@@ -19,7 +19,44 @@ Panel {
   readonly property string contentFontFamily: bar ? bar.fontFamily : Style.font.family
   readonly property color dim: Qt.darker(contentForeground, 1.45)
 
+  property bool editingName: false
+
+  function startRename() {
+    root.editingName = true
+    Qt.callLater(function() {
+      if (nameField) {
+        nameField.text = root.service ? root.service.petName : "Archie"
+        nameField.selectAll()
+        nameField.forceActiveFocus()
+      }
+    })
+  }
+
+  function commitRename() {
+    var newName = (nameField ? nameField.text : "").trim()
+    if (!newName) newName = "Archie"
+    if (root.service) root.service.rename(newName)
+    if (root.hostWidget && typeof root.hostWidget.setName === "function") {
+      root.hostWidget.setName(newName)
+    }
+    root.editingName = false
+    keyCatcher.forceActiveFocus()
+  }
+
+  function cancelRename() {
+    root.editingName = false
+    keyCatcher.forceActiveFocus()
+  }
+
+  function selectAnimal(animalName) {
+    if (root.service) root.service.setAnimal(animalName)
+    if (root.hostWidget && typeof root.hostWidget.setAnimal === "function") {
+      root.hostWidget.setAnimal(animalName)
+    }
+  }
+
   function open() {
+    root.editingName = false
     root.controller.show()
     Qt.callLater(function() {
       if (root.opened) setCenterHoverRevealSuppressed(true)
@@ -28,6 +65,7 @@ Panel {
   }
 
   function close() {
+    root.editingName = false
     setCenterHoverRevealSuppressed(false)
     root.controller.hide()
   }
@@ -129,7 +167,7 @@ Panel {
     id: panel
     anchorItem: root.anchorItem
     owner: root.barIdentity
-    bar: barProxy
+    bar: root.bar
     open: root.opened
     centerOnBar: false
     focusTarget: keyCatcher
@@ -139,19 +177,22 @@ Panel {
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
+      blocked: root.editingName
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
       onTextKey: function(t) {
+        if (root.editingName) return
         if (!root.service) return
         var k = String(t).toLowerCase()
         if (k === "p") { root.service.pet() }
-        else if (k === "f") { root.service.feed("fish") }
+        else if (k === "f") { root.service.feed("favorite") }
         else if (k === "c") { root.service.feed("coffee") }
         else if (k === "m") { root.service.feed("milk") }
-        else if (k === "1") { root.service.setSkin("pixel_cat") }
-        else if (k === "2") { root.service.setSkin("classic_bongo") }
-        else if (k === "3") { root.service.setSkin("shiba") }
-        else if (k === "4") { root.service.setSkin("cyberpunk") }
+        else if (k === "n" || k === "r") { root.startRename() }
+        else if (k === "1") { root.selectAnimal("cat") }
+        else if (k === "2") { root.selectAnimal("capy") }
+        else if (k === "3") { root.selectAnimal("dog") }
+        else if (k === "4") { root.selectAnimal("bunny") }
       }
 
       Column {
@@ -173,46 +214,172 @@ Panel {
             anchors.centerIn: parent
             spacing: Style.space(14)
 
-            // Large Animated Avatar
+            // Large Animated Vector Avatar
             BorderSurface {
-              width: Style.space(56)
-              height: Style.space(56)
+              width: Style.space(58)
+              height: Style.space(58)
               color: Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.12)
               borderSpec: Border.controlSpec("normal", Color.accent, Color.accent)
-              radius: Style.space(8)
+              radius: Style.space(10)
 
-              Image {
+              PetRenderer {
                 anchors.centerIn: parent
-                width: Style.space(48)
-                height: Style.space(48)
-                smooth: false // razor sharp retro pixels
-                fillMode: Image.PreserveAspectFit
-                source: root.service ? Qt.resolvedUrl("assets/sprites/" + root.service.skin + "/" + root.service.currentState + ".png") : ""
+                width: Style.space(50)
+                height: Style.space(34)
+                animal: root.service ? root.service.animal : "cat"
+                state: root.service ? root.service.currentState : "run"
+                strokeColor: Color.accent
+              }
 
-                MouseArea {
-                  anchors.fill: parent
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: {
-                    if (root.service) root.service.pet()
-                  }
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                  if (root.service) root.service.pet()
                 }
               }
             }
 
-            // Pet Info & Mood
+            // Pet Info & Mood (with inline rename option)
             Column {
               anchors.verticalCenter: parent.verticalCenter
-              width: parent.width - Style.space(56) - Style.space(14) - energyPill.implicitWidth - Style.space(8)
+              width: parent.width - Style.space(58) - Style.space(14) - energyPill.implicitWidth - Style.space(8)
               spacing: Style.space(3)
 
-              Text {
-                text: root.service ? root.service.petName : "Archie"
-                color: root.contentForeground
-                font.family: root.contentFontFamily
-                font.pixelSize: Style.font.title
-                font.bold: true
+              // Normal Display Mode
+              Item {
+                width: parent.width
+                implicitHeight: Math.max(petTitleText.implicitHeight, editBtn.height)
+                visible: !root.editingName
+
+                Row {
+                  id: titleRow
+                  anchors.left: parent.left
+                  anchors.right: parent.right
+                  anchors.verticalCenter: parent.verticalCenter
+                  spacing: Style.space(6)
+
+                  Text {
+                    id: petTitleText
+                    text: root.service ? (root.service.petName + " (" + root.service.animal.toUpperCase() + ")") : "Archie"
+                    color: root.contentForeground
+                    font.family: root.contentFontFamily
+                    font.pixelSize: Style.font.title
+                    font.bold: true
+                    elide: Text.ElideRight
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.min(implicitWidth, parent.width - editBtn.width - Style.space(6))
+                  }
+
+                  BorderSurface {
+                    id: editBtn
+                    width: Style.space(22)
+                    height: Style.space(22)
+                    anchors.verticalCenter: parent.verticalCenter
+                    radius: Style.cornerRadius
+                    color: editMouse.containsMouse ? Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.2) : "transparent"
+                    borderSpec: Border.controlSpec("normal", editMouse.containsMouse ? Color.accent : Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.25), Color.accent)
+
+                    Text {
+                      anchors.centerIn: parent
+                      text: "✎"
+                      font.pixelSize: Style.font.caption
+                      color: editMouse.containsMouse ? Color.accent : root.dim
+                    }
+                  }
+                }
+
+                MouseArea {
+                  id: editMouse
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: root.startRename()
+                }
               }
 
+              // Rename Input Row
+              Row {
+                width: parent.width
+                spacing: Style.space(4)
+                visible: root.editingName
+
+                TextField {
+                  id: nameField
+                  width: parent.width - saveBtn.width - cancelBtn.width - Style.space(8)
+                  implicitHeight: Style.space(28)
+                  placeholderText: "Pet name..."
+                  foreground: root.contentForeground
+                  font.family: root.contentFontFamily
+                  font.pixelSize: Style.font.bodySmall
+                  verticalPadding: Style.space(3)
+                  horizontalPadding: Style.space(6)
+                  maximumLength: 20
+
+                  Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                      root.commitRename()
+                      event.accepted = true
+                    } else if (event.key === Qt.Key_Escape) {
+                      root.cancelRename()
+                      event.accepted = true
+                    }
+                  }
+                }
+
+                // Save button (✓)
+                BorderSurface {
+                  id: saveBtn
+                  width: Style.space(26)
+                  height: Style.space(28)
+                  radius: Style.cornerRadius
+                  color: saveMouse.containsMouse ? Color.accent : Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.2)
+                  borderSpec: Border.controlSpec("normal", Color.accent, Color.accent)
+
+                  Text {
+                    anchors.centerIn: parent
+                    text: "✓"
+                    font.pixelSize: Style.font.caption
+                    font.bold: true
+                    color: saveMouse.containsMouse ? Color.background : Color.accent
+                  }
+
+                  MouseArea {
+                    id: saveMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.commitRename()
+                  }
+                }
+
+                // Cancel button (✕)
+                BorderSurface {
+                  id: cancelBtn
+                  width: Style.space(26)
+                  height: Style.space(28)
+                  radius: Style.cornerRadius
+                  color: cancelMouse.containsMouse ? Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.15) : "transparent"
+                  borderSpec: Border.controlSpec("normal", Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.3), Color.accent)
+
+                  Text {
+                    anchors.centerIn: parent
+                    text: "✕"
+                    font.pixelSize: Style.font.caption
+                    color: cancelMouse.containsMouse ? Color.urgent : root.dim
+                  }
+
+                  MouseArea {
+                    id: cancelMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.cancelRename()
+                  }
+                }
+              }
+
+              // Mood subtitle
               Text {
                 text: root.service ? root.service.moodText : "Vibing"
                 color: Color.accent
@@ -220,6 +387,7 @@ Panel {
                 font.pixelSize: Style.font.caption
                 elide: Text.ElideRight
                 width: parent.width
+                visible: !root.editingName
               }
             }
 
@@ -255,7 +423,7 @@ Panel {
           }
         }
 
-        // 2. Care & Snacks Section
+        // 2. Care & Snacks Section (Adaptive to Active Animal!)
         PanelSectionHeader {
           width: parent.width
           text: "Care & Snacks"
@@ -289,31 +457,31 @@ Panel {
             }
           }
 
-          // 🐟 Fish
+          // 🐟 / 🍊 / 🦴 / 🥕 Favorite Snack (Adapts to animal)
           Button {
             width: (parent.width - Style.space(24)) / 4
             implicitHeight: Style.space(42)
             bordered: true
-            onClicked: { if (root.service) root.service.feed("fish") }
+            onClicked: { if (root.service) root.service.feed("favorite") }
 
             Column {
               anchors.centerIn: parent
               spacing: Style.space(1)
               Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "🐟"
+                text: root.service ? root.service.favoriteSnack.icon : "🐟"
                 font.pixelSize: Style.font.body
               }
               Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Fish [F]"
+                text: (root.service ? root.service.favoriteSnack.name : "Snack") + " [F]"
                 color: root.contentForeground
                 font.pixelSize: Style.font.caption
               }
             }
           }
 
-          // ☕ Coffee
+          // ☕ Coffee (Hyper Zoomies)
           Button {
             width: (parent.width - Style.space(24)) / 4
             implicitHeight: Style.space(42)
@@ -337,7 +505,7 @@ Panel {
             }
           }
 
-          // 🥛 Milk
+          // 🥛 Milk (Nap Time)
           Button {
             width: (parent.width - Style.space(24)) / 4
             implicitHeight: Style.space(42)
@@ -362,32 +530,32 @@ Panel {
           }
         }
 
-        // 3. Wardrobe / Skin Switcher
+        // 3. Animal Switcher (4 Distinct Animals in Style 3)
         PanelSectionHeader {
           width: parent.width
-          text: "Wardrobe & Skins"
+          text: "Choose Pet (Style 3 Line Art)"
         }
 
         Row {
           width: parent.width
           spacing: Style.space(8)
 
-          readonly property var skins: [
-            { id: "pixel_cat", name: "Pixel Cat", key: "1" },
-            { id: "classic_bongo", name: "Bongo Cat", key: "2" },
-            { id: "shiba", name: "Shiba Inu", key: "3" },
-            { id: "cyberpunk", name: "Cyber Cat", key: "4" }
+          readonly property var animals: [
+            { id: "cat", name: "Cat", icon: "🐱", key: "1" },
+            { id: "capy", name: "Capybara", icon: "🍊", key: "2" },
+            { id: "dog", name: "Shiba", icon: "🐶", key: "3" },
+            { id: "bunny", name: "Bunny", icon: "🐰", key: "4" }
           ]
 
           Repeater {
-            model: parent.skins
+            model: parent.animals
 
             delegate: BorderSurface {
-              id: skinCard
+              id: animalCard
               width: (mainColumn.width - Style.space(24)) / 4
-              implicitHeight: Style.space(66)
+              implicitHeight: Style.space(68)
               radius: Style.cornerRadius
-              readonly property bool isSelected: root.service && root.service.skin === modelData.id
+              readonly property bool isSelected: root.service && root.service.animal === modelData.id
 
               color: isSelected
                 ? Qt.rgba(Color.accent.r, Color.accent.g, Color.accent.b, 0.16)
@@ -400,26 +568,26 @@ Panel {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                  if (root.service) root.service.setSkin(modelData.id)
+                  root.selectAnimal(modelData.id)
                 }
               }
 
               Column {
                 anchors.centerIn: parent
-                spacing: Style.space(4)
+                spacing: Style.space(3)
 
-                Image {
+                PetRenderer {
                   anchors.horizontalCenter: parent.horizontalCenter
-                  width: Style.space(28)
-                  height: Style.space(28)
-                  smooth: false
-                  fillMode: Image.PreserveAspectFit
-                  source: Qt.resolvedUrl("assets/sprites/" + modelData.id + "/idle.png")
+                  width: Style.space(34)
+                  height: Style.space(22)
+                  animal: modelData.id
+                  state: isSelected ? (root.service ? root.service.currentState : "run") : "run"
+                  strokeColor: isSelected ? Color.accent : root.contentForeground
                 }
 
                 Text {
                   anchors.horizontalCenter: parent.horizontalCenter
-                  text: modelData.name
+                  text: modelData.name + " [" + modelData.key + "]"
                   color: isSelected ? Color.accent : root.contentForeground
                   font.family: root.contentFontFamily
                   font.pixelSize: Style.font.caption
@@ -430,7 +598,7 @@ Panel {
           }
         }
 
-        // 4. Reactive Toggles
+        // 4. Reactivity Settings
         PanelSectionHeader {
           width: parent.width
           text: "Reactivity Settings"
@@ -442,18 +610,8 @@ Panel {
 
           Toggle {
             width: parent.width
-            label: "Typing Reactivity"
-            description: "Animate paws tapping desk when typing"
-            checked: root.service ? root.service.typingReactive : true
-            onClicked: {
-              if (root.service) root.service.typingReactive = !root.service.typingReactive
-            }
-          }
-
-          Toggle {
-            width: parent.width
-            label: "Audio & Bongo Reactivity"
-            description: "Play bongos when music or video audio is playing"
+            label: "Audio & Music Reactivity"
+            description: "Wear glowing headphones & groove to the music beat (♫ ♪)"
             checked: root.service ? root.service.audioReactive : true
             onClicked: {
               if (root.service) root.service.audioReactive = !root.service.audioReactive
@@ -462,8 +620,18 @@ Panel {
 
           Toggle {
             width: parent.width
+            label: "Typing Reactivity"
+            description: "Open mini laptop & tap paws when typing on keyboard"
+            checked: root.service ? root.service.typingReactive : true
+            onClicked: {
+              if (root.service) root.service.typingReactive = !root.service.typingReactive
+            }
+          }
+
+          Toggle {
+            width: parent.width
             label: "Sound Effects"
-            description: "Play subtle purr, snack, and click sounds"
+            description: "Subtle purr, snack eating, and click sound effects"
             checked: root.service ? root.service.soundEffects : true
             onClicked: {
               if (root.service) root.service.soundEffects = !root.service.soundEffects
@@ -474,17 +642,31 @@ Panel {
         // 5. Footer Quick Shortcuts Bar
         BorderSurface {
           width: parent.width
-          implicitHeight: Style.space(28)
+          implicitHeight: shortcutColumn.implicitHeight + Style.space(12)
           color: Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.03)
           borderSpec: Border.controlSpec("normal", root.contentForeground, Color.accent)
           radius: Style.cornerRadius
 
-          Text {
+          Column {
+            id: shortcutColumn
             anchors.centerIn: parent
-            text: "Shortcuts: [P] Pet  [F] Fish  [C] Coffee  [M] Milk  [1-4] Skins  [Esc] Close"
-            color: root.dim
-            font.family: root.contentFontFamily
-            font.pixelSize: Style.font.caption
+            spacing: Style.space(3)
+
+            Text {
+              anchors.horizontalCenter: parent.horizontalCenter
+              text: "[P] Pet   •   [F] Snack   •   [C] Coffee   •   [M] Milk"
+              color: root.contentForeground
+              font.family: root.contentFontFamily
+              font.pixelSize: Style.font.caption
+            }
+
+            Text {
+              anchors.horizontalCenter: parent.horizontalCenter
+              text: "[1-4] Choose Pet   •   [N] Rename   •   [Esc] Close"
+              color: root.dim
+              font.family: root.contentFontFamily
+              font.pixelSize: Style.font.caption
+            }
           }
         }
       }
