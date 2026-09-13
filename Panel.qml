@@ -407,13 +407,26 @@ Panel {
                 spacing: Style.space(5)
 
                 Text {
-                  text: (root.service && root.service.energy > 50) ? "⚡" : "🪫"
+                  text: {
+                    if (!root.service) return "⚡"
+                    var e = root.service.energy
+                    if (e > 75) return "⚡"
+                    if (e > 50) return "🔋"
+                    if (e > 25) return "🪫"
+                    return "💤"
+                  }
                   font.pixelSize: Style.font.caption
                 }
 
                 Text {
                   text: (root.service ? root.service.energy : 100) + "%"
-                  color: root.contentForeground
+                  color: {
+                    if (!root.service) return root.contentForeground
+                    var e = root.service.energy
+                    if (e <= 25) return "#f38ba8"
+                    if (e <= 50) return "#fab387"
+                    return root.contentForeground
+                  }
                   font.family: root.contentFontFamily
                   font.pixelSize: Style.font.caption
                   font.bold: true

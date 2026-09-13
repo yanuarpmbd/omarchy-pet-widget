@@ -237,11 +237,11 @@ Item {
             x: 18; y: 21
             transformOrigin: Item.Top
             SequentialAnimation on rotation {
-            running: root.animal === "cat" && (root.state === "run" || root.state === "happy")
-            loops: Animation.Infinite
-            NumberAnimation { to: -20; duration: 250; easing.type: Easing.InOutSine }
-            NumberAnimation { to: 20; duration: 250; easing.type: Easing.InOutSine }
-          }
+              running: root.animal === "cat" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              NumberAnimation { to: -20; duration: 250; easing.type: Easing.InOutSine }
+              NumberAnimation { to: 20; duration: 250; easing.type: Easing.InOutSine }
+            }
             Shape {
               x: -18; y: -21; width: 50; height: 32
               ShapePath { strokeColor: root.strokeColor; strokeWidth: 1.8; capStyle: ShapePath.RoundCap; PathSvg { path: "M18,21 L16,28" } }
@@ -252,11 +252,11 @@ Item {
             x: 22; y: 21
             transformOrigin: Item.Top
             SequentialAnimation on rotation {
-            running: root.animal === "cat" && (root.state === "run" || root.state === "happy")
-            loops: Animation.Infinite
-            NumberAnimation { to: 20; duration: 250; easing.type: Easing.InOutSine }
-            NumberAnimation { to: -20; duration: 250; easing.type: Easing.InOutSine }
-          }
+              running: root.animal === "cat" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              NumberAnimation { to: 20; duration: 250; easing.type: Easing.InOutSine }
+              NumberAnimation { to: -20; duration: 250; easing.type: Easing.InOutSine }
+            }
             Shape {
               x: -22; y: -21; width: 50; height: 32
               ShapePath { strokeColor: root.strokeColor; strokeWidth: 1.8; capStyle: ShapePath.RoundCap; PathSvg { path: "M22,21 L24,28" } }
@@ -267,11 +267,11 @@ Item {
             x: 32; y: 20
             transformOrigin: Item.Top
             SequentialAnimation on rotation {
-            running: root.animal === "cat" && (root.state === "run" || root.state === "happy")
-            loops: Animation.Infinite
-            NumberAnimation { to: -20; duration: 250; easing.type: Easing.InOutSine }
-            NumberAnimation { to: 20; duration: 250; easing.type: Easing.InOutSine }
-          }
+              running: root.animal === "cat" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              NumberAnimation { to: -20; duration: 250; easing.type: Easing.InOutSine }
+              NumberAnimation { to: 20; duration: 250; easing.type: Easing.InOutSine }
+            }
             Shape {
               x: -32; y: -20; width: 50; height: 32
               ShapePath { strokeColor: root.strokeColor; strokeWidth: 1.8; capStyle: ShapePath.RoundCap; PathSvg { path: "M32,20 L30,28" } }
@@ -282,11 +282,11 @@ Item {
             x: 36; y: 19
             transformOrigin: Item.Top
             SequentialAnimation on rotation {
-            running: root.animal === "cat" && (root.state === "run" || root.state === "happy")
-            loops: Animation.Infinite
-            NumberAnimation { to: 20; duration: 250; easing.type: Easing.InOutSine }
-            NumberAnimation { to: -20; duration: 250; easing.type: Easing.InOutSine }
-          }
+              running: root.animal === "cat" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              NumberAnimation { to: 20; duration: 250; easing.type: Easing.InOutSine }
+              NumberAnimation { to: -20; duration: 250; easing.type: Easing.InOutSine }
+            }
             Shape {
               x: -36; y: -19; width: 50; height: 32
               ShapePath { strokeColor: root.strokeColor; strokeWidth: 1.8; capStyle: ShapePath.RoundCap; PathSvg { path: "M36,19 L38,28" } }
@@ -475,44 +475,44 @@ Item {
             x: 16; y: 26
             transformOrigin: Item.Top
             SequentialAnimation on rotation {
-            running: root.animal === "capy" && (root.state === "run" || root.state === "happy")
-            loops: Animation.Infinite
-            NumberAnimation { to: -14; duration: 320; easing.type: Easing.InOutSine }
-            NumberAnimation { to: 14; duration: 320; easing.type: Easing.InOutSine }
-          }
+              running: root.animal === "capy" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              NumberAnimation { to: -14; duration: 320; easing.type: Easing.InOutSine }
+              NumberAnimation { to: 14; duration: 320; easing.type: Easing.InOutSine }
+            }
             Shape { x: -16; y: -26; width: 50; height: 32; ShapePath { strokeColor: root.strokeColor; strokeWidth: 2.2; capStyle: ShapePath.RoundCap; PathSvg { path: "M16,26 L14,33" } } }
           }
           Item {
             x: 21; y: 26
             transformOrigin: Item.Top
             SequentialAnimation on rotation {
-            running: root.animal === "capy" && (root.state === "run" || root.state === "happy")
-            loops: Animation.Infinite
-            NumberAnimation { to: 14; duration: 320; easing.type: Easing.InOutSine }
-            NumberAnimation { to: -14; duration: 320; easing.type: Easing.InOutSine }
-          }
+              running: root.animal === "capy" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              NumberAnimation { to: 14; duration: 320; easing.type: Easing.InOutSine }
+              NumberAnimation { to: -14; duration: 320; easing.type: Easing.InOutSine }
+            }
             Shape { x: -21; y: -26; width: 50; height: 32; ShapePath { strokeColor: root.strokeColor; strokeWidth: 2.2; capStyle: ShapePath.RoundCap; PathSvg { path: "M21,26 L23,33" } } }
           }
           Item {
             x: 28; y: 26
             transformOrigin: Item.Top
             SequentialAnimation on rotation {
-            running: root.animal === "capy" && (root.state === "run" || root.state === "happy")
-            loops: Animation.Infinite
-            NumberAnimation { to: -14; duration: 320; easing.type: Easing.InOutSine }
-            NumberAnimation { to: 14; duration: 320; easing.type: Easing.InOutSine }
-          }
+              running: root.animal === "capy" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              NumberAnimation { to: -14; duration: 320; easing.type: Easing.InOutSine }
+              NumberAnimation { to: 14; duration: 320; easing.type: Easing.InOutSine }
+            }
             Shape { x: -28; y: -26; width: 50; height: 32; ShapePath { strokeColor: root.strokeColor; strokeWidth: 2.2; capStyle: ShapePath.RoundCap; PathSvg { path: "M28,26 L26,33" } } }
           }
           Item {
             x: 33; y: 25
             transformOrigin: Item.Top
             SequentialAnimation on rotation {
-            running: root.animal === "capy" && (root.state === "run" || root.state === "happy")
-            loops: Animation.Infinite
-            NumberAnimation { to: 14; duration: 320; easing.type: Easing.InOutSine }
-            NumberAnimation { to: -14; duration: 320; easing.type: Easing.InOutSine }
-          }
+              running: root.animal === "capy" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              NumberAnimation { to: 14; duration: 320; easing.type: Easing.InOutSine }
+              NumberAnimation { to: -14; duration: 320; easing.type: Easing.InOutSine }
+            }
             Shape { x: -33; y: -25; width: 50; height: 32; ShapePath { strokeColor: root.strokeColor; strokeWidth: 2.2; capStyle: ShapePath.RoundCap; PathSvg { path: "M33,25 L35,33" } } }
           }
         }
@@ -685,7 +685,7 @@ Item {
           Item {
             x: 19; y: 21; transformOrigin: Item.Top
             SequentialAnimation on rotation {
-              running: root.animal === "dog" && (root.state === "run" || root.state === "happy")
+              running: root.animal === "dog" && (root.state === "run" || root.state === "music" || root.state === "happy")
               loops: Animation.Infinite
               NumberAnimation { to: -24; duration: 200; easing.type: Easing.InOutSine }
               NumberAnimation { to: 24; duration: 200; easing.type: Easing.InOutSine }
@@ -695,7 +695,7 @@ Item {
           Item {
             x: 24; y: 21; transformOrigin: Item.Top
             SequentialAnimation on rotation {
-              running: root.animal === "dog" && (root.state === "run" || root.state === "happy")
+              running: root.animal === "dog" && (root.state === "run" || root.state === "music" || root.state === "happy")
               loops: Animation.Infinite
               NumberAnimation { to: 24; duration: 200; easing.type: Easing.InOutSine }
               NumberAnimation { to: -24; duration: 200; easing.type: Easing.InOutSine }
@@ -705,7 +705,7 @@ Item {
           Item {
             x: 32; y: 20; transformOrigin: Item.Top
             SequentialAnimation on rotation {
-              running: root.animal === "dog" && (root.state === "run" || root.state === "happy")
+              running: root.animal === "dog" && (root.state === "run" || root.state === "music" || root.state === "happy")
               loops: Animation.Infinite
               NumberAnimation { to: -24; duration: 200; easing.type: Easing.InOutSine }
               NumberAnimation { to: 24; duration: 200; easing.type: Easing.InOutSine }
@@ -715,7 +715,7 @@ Item {
           Item {
             x: 37; y: 19; transformOrigin: Item.Top
             SequentialAnimation on rotation {
-              running: root.animal === "dog" && (root.state === "run" || root.state === "happy")
+              running: root.animal === "dog" && (root.state === "run" || root.state === "music" || root.state === "happy")
               loops: Animation.Infinite
               NumberAnimation { to: 24; duration: 200; easing.type: Easing.InOutSine }
               NumberAnimation { to: -24; duration: 200; easing.type: Easing.InOutSine }
@@ -739,10 +739,15 @@ Item {
         anchors.fill: parent
 
         SequentialAnimation on y {
-          running: root.animal === "bunny" && (root.state === "run" || root.state === "music")
+          running: root.animal === "bunny" && (root.state === "run" || root.state === "music" || root.state === "happy")
           loops: Animation.Infinite
-          NumberAnimation { to: -3.0; duration: 240; easing.type: Easing.OutQuad }
-          NumberAnimation { to: 0.0; duration: 280; easing.type: Easing.InQuad }
+          // 1. Upward leap / arc
+          NumberAnimation { to: -5.0; duration: 220; easing.type: Easing.OutQuad }
+          // 2. Downward landing
+          NumberAnimation { to: 0.0; duration: 200; easing.type: Easing.InQuad }
+          // 3. Ground cushion / crouch pause before next leap
+          NumberAnimation { to: 0.6; duration: 80; easing.type: Easing.OutQuad }
+          NumberAnimation { to: 0.0; duration: 60; easing.type: Easing.InQuad }
         }
 
         // Fluffy Round Puff Tail
@@ -781,17 +786,119 @@ Item {
             fillColor: root.pinkColor
             PathSvg { path: "M41.5,17.5 m-0.8,0 a0.8,0.8 0 1,0 1.6,0 a0.8,0.8 0 1,0 -1.6,0" }
           }
-          // Hopping Feet
-          ShapePath {
-            strokeColor: root.strokeColor
-            strokeWidth: 1.8
-            capStyle: ShapePath.RoundCap
-            fillColor: "transparent"
-            PathSvg { path: "M35,21 L36,27 M18,18 C16,21 16,24 18,27 L23,27" }
+        }
+
+        // Bunny Animated Hopping Legs (Hind feet kick & tuck in unison, paws reach forward)
+        Item {
+          visible: root.state === "run" || root.state === "music" || root.state === "happy"
+          anchors.fill: parent
+
+          // Back Thumper Foot 1 (Back left)
+          Item {
+            x: 18; y: 19
+            transformOrigin: Item.Top
+            SequentialAnimation on rotation {
+              running: root.animal === "bunny" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              // Launch: kick backwards together!
+              NumberAnimation { to: -26; duration: 220; easing.type: Easing.OutQuad }
+              // Touchdown: swing forward
+              NumberAnimation { to: 16; duration: 200; easing.type: Easing.InQuad }
+              // Ground cushion settle
+              NumberAnimation { to: 0; duration: 140; easing.type: Easing.InOutSine }
+            }
+            Shape {
+              x: -18; y: -19; width: 50; height: 32
+              ShapePath {
+                strokeColor: root.strokeColor
+                strokeWidth: 2.0
+                capStyle: ShapePath.RoundCap
+                fillColor: "transparent"
+                PathSvg { path: "M18,19 C16,22 16,25 18,28 L23,28" }
+              }
+            }
+          }
+
+          // Back Thumper Foot 2 (Back right - synchronous in unison)
+          Item {
+            x: 21; y: 19
+            transformOrigin: Item.Top
+            SequentialAnimation on rotation {
+              running: root.animal === "bunny" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              // Launch: kick backwards together!
+              NumberAnimation { to: -24; duration: 220; easing.type: Easing.OutQuad }
+              // Touchdown: swing forward together!
+              NumberAnimation { to: 14; duration: 200; easing.type: Easing.InQuad }
+              // Ground cushion settle
+              NumberAnimation { to: 0; duration: 140; easing.type: Easing.InOutSine }
+            }
+            Shape {
+              x: -21; y: -19; width: 50; height: 32
+              ShapePath {
+                strokeColor: root.strokeColor
+                strokeWidth: 1.8
+                capStyle: ShapePath.RoundCap
+                fillColor: "transparent"
+                PathSvg { path: "M21,19 C20,22 20,25 22,28 L26,28" }
+              }
+            }
+          }
+
+          // Front Paw 1 (Left - reaches forward in air, absorbs on touchdown)
+          Item {
+            x: 32; y: 20
+            transformOrigin: Item.Top
+            SequentialAnimation on rotation {
+              running: root.animal === "bunny" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              // Flight: reach forward
+              NumberAnimation { to: 24; duration: 220; easing.type: Easing.OutQuad }
+              // Touchdown: land and push back
+              NumberAnimation { to: -16; duration: 200; easing.type: Easing.InQuad }
+              // Settle
+              NumberAnimation { to: 0; duration: 140; easing.type: Easing.InOutSine }
+            }
+            Shape {
+              x: -32; y: -20; width: 50; height: 32
+              ShapePath {
+                strokeColor: root.strokeColor
+                strokeWidth: 1.8
+                capStyle: ShapePath.RoundCap
+                fillColor: "transparent"
+                PathSvg { path: "M32,20 L30,27" }
+              }
+            }
+          }
+
+          // Front Paw 2 (Right)
+          Item {
+            x: 35; y: 20
+            transformOrigin: Item.Top
+            SequentialAnimation on rotation {
+              running: root.animal === "bunny" && (root.state === "run" || root.state === "music" || root.state === "happy")
+              loops: Animation.Infinite
+              // Flight: reach forward
+              NumberAnimation { to: 20; duration: 220; easing.type: Easing.OutQuad }
+              // Touchdown
+              NumberAnimation { to: -14; duration: 200; easing.type: Easing.InQuad }
+              // Settle
+              NumberAnimation { to: 0; duration: 140; easing.type: Easing.InOutSine }
+            }
+            Shape {
+              x: -35; y: -20; width: 50; height: 32
+              ShapePath {
+                strokeColor: root.strokeColor
+                strokeWidth: 1.8
+                capStyle: ShapePath.RoundCap
+                fillColor: "transparent"
+                PathSvg { path: "M35,20 L37,27" }
+              }
+            }
           }
         }
 
-        // Tall Upright Bunny Ears with Sway
+        // Tall Upright Bunny Ears with Hop Bounce
         Item {
           id: bunnyEars
           x: 35; y: 13
@@ -801,8 +908,12 @@ Item {
           SequentialAnimation on rotation {
             running: root.animal === "bunny" && (root.state === "run" || root.state === "music" || root.state === "happy")
             loops: Animation.Infinite
-            NumberAnimation { to: 14; duration: 280; easing.type: Easing.InOutSine }
-            NumberAnimation { to: -8; duration: 280; easing.type: Easing.InOutSine }
+            // Leap: ears trail back with upward flight
+            NumberAnimation { to: -16; duration: 220; easing.type: Easing.OutQuad }
+            // Landing: ears bounce forward with momentum!
+            NumberAnimation { to: 18; duration: 200; easing.type: Easing.OutQuad }
+            // Settle upright
+            NumberAnimation { to: 0; duration: 140; easing.type: Easing.OutBounce }
           }
 
           Shape {

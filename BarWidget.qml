@@ -132,16 +132,22 @@ BarWidget {
     function setAnimal(name: string): void { root.setAnimal(name) }
     function setSkin(name: string): void { root.setAnimal(name) }
     function status(): string {
+      var tierStr = "high"
+      if (petService.energy <= 25) tierStr = "exhausted"
+      else if (petService.energy <= 50) tierStr = "low"
+      else if (petService.energy <= 75) tierStr = "medium"
       return JSON.stringify({
         name: petService.petName,
         animal: petService.animal,
         state: petService.currentState,
         mood: petService.moodText,
         energy: petService.energy,
+        energyTier: tierStr,
         cpu: petService.cpuPercent,
         isTyping: petService.isTyping,
         isMusic: petService.isMusicPlaying,
         isSleeping: petService.isSleeping,
+        isRoaming: petService.isRoaming,
         width: root.width,
         targetWidth: root.targetRunwayWidth,
         gap: root.dynamicAvailableGap,
@@ -159,7 +165,11 @@ BarWidget {
   function buildTooltip() {
     var s = "🐾 " + petService.petName + " (" + petService.animal.toUpperCase() + ")\n"
     s += "Mood: " + petService.moodText + "\n"
-    s += "Energy: " + petService.energy + "%\n"
+    var tierStr = "High"
+    if (petService.energy <= 25) tierStr = "Exhausted"
+    else if (petService.energy <= 50) tierStr = "Low"
+    else if (petService.energy <= 75) tierStr = "Medium"
+    s += "Energy: " + petService.energy + "% (" + tierStr + ")\n"
     s += "Left-Click: Care Drawer | Middle-Click: Pet & Purr"
     return s
   }
@@ -269,25 +279,59 @@ BarWidget {
     if (petX > maxPetX) petX = maxPetX
   }
 
-  // 60 FPS Roaming Movement Timer
+  property real bunnyHopProgress: 0.0
+
+  // 60 FPS Roaming Movement Timer (Active during "run" and "music" when energy > 25%)
   Timer {
     id: roamTimer
     interval: 16 // 60 FPS
-    running: petService.currentState === "run" && root.maxPetX > Style.space(8)
+    running: petService.energy > 25 && (petService.currentState === "run" || petService.currentState === "music") && root.maxPetX > Style.space(8)
     repeat: true
     onTriggered: {
-      var speed = 0.75
+      var baseSpeed = petService.currentState === "music" ? 0.65 : 0.75
+      if (petService.coffeeActive) baseSpeed = 1.2
+
+      // Tiered energy speed factor
+      var e = petService.energy
+      var energyFactor = 1.0
+      if (e <= 25) {
+        energyFactor = 0.0 // Never moves along runway
+      } else if (e <= 50) {
+        // Low tier (25 - 50%): 0.50 to 0.65
+        energyFactor = 0.50 + ((e - 25) / 25.0) * 0.15
+      } else if (e <= 75) {
+        // Medium tier (50 - 75%): 0.75 to 0.88
+        energyFactor = 0.75 + ((e - 50) / 25.0) * 0.13
+      } else {
+        // High tier (75 - 100%): 0.95 to 1.12
+        energyFactor = 0.95 + ((e - 75) / 25.0) * 0.17
+      }
+      var speed = baseSpeed * energyFactor
+
+      // Bunny-specific hopping kinematics (pulsed leaps + ground pause)
+      if (petService.animal === "bunny") {
+        root.bunnyHopProgress = (root.bunnyHopProgress + 0.0286) % 1.0
+        if (root.bunnyHopProgress <= 0.75) {
+          var hopT = root.bunnyHopProgress / 0.75
+          speed *= Math.sin(hopT * Math.PI) * 2.5
+        } else {
+          speed = 0.0 // Brief touchdown pause before next jump
+        }
+      }
+
       if (root.facingRight) {
         root.petX += speed
         if (root.petX >= root.maxPetX) {
           root.petX = root.maxPetX
           root.facingRight = false
+          root.bunnyHopProgress = 0.0
         }
       } else {
         root.petX -= speed
         if (root.petX <= Style.space(2)) {
           root.petX = Style.space(2)
           root.facingRight = true
+          root.bunnyHopProgress = 0.0
         }
       }
     }

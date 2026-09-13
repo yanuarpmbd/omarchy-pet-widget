@@ -57,23 +57,69 @@ Item {
       return "Purring happily ♥"
     }
     if (coffeeActive) return "Hyper caffeine zoomies! ⚡"
-    if (isSleeping) return "Napping peacefully zZz"
+    if (isTyping && typingReactive) {
+      if (energy <= 25) return "Tiredly coding on laptop... 💻🪫"
+      if (energy <= 50) return "Coding steadily on laptop 💻"
+      return "Coding frenzy on laptop! 💻⚡"
+    }
+    if (isSleeping) {
+      if (energy <= 25) {
+        if (isMusicPlaying && audioReactive) return "Drowsing to music in deep sleep... 🪫 zZz"
+        return "Exhausted deep nap zZz 🪫"
+      }
+      if (energy <= 50) return "Low battery nap zZz 🪫"
+      return "Napping peacefully zZz"
+    }
+    // Tier 1: Exhausted / Critical (10 - 25%) - Sitting / Resting
+    if (energy <= 25) {
+      if (isMusicPlaying && audioReactive) {
+        if (musicTitle !== "") return "Too tired to dance, resting to " + musicTitle + " 🪫"
+        return "Too tired to dance, resting to music 🪫"
+      }
+      return "Completely drained, resting 🪫"
+    }
+    // Audio / Music (Tiers 2, 3, 4)
     if (isMusicPlaying && audioReactive) {
-      if (musicTitle !== "") return "Jamming with headphones to " + musicTitle + " ♫"
+      if (musicTitle !== "") {
+        if (energy <= 50) return "Slowly swaying to " + musicTitle + " ♫"
+        return "Jamming with headphones to " + musicTitle + " ♫"
+      }
+      if (energy <= 50) return "Slowly swaying to music with headphones ♫"
       return "Grooving to the music with headphones ♫"
     }
-    if (isTyping && typingReactive) return "Coding frenzy on laptop!"
     if (isHeavyLoad) return "Puffing / High CPU load!"
-    if (currentState === "run") {
-      if (animal === "capy") return "Waddling calmly with yuzu 🍊"
-      if (animal === "dog") return "Trotting happily along runway 🐾"
-      if (animal === "bunny") return "Hopping along the runway 🐇"
-      return "Prowling along the bar 🐾"
+
+    // Tier 2: Low Energy (25 - 50%)
+    if (energy <= 50) {
+      if (!isRoaming) return "Low battery, resting tiredly 🪫"
+      return "Low battery, plodding sluggishly... 🪫"
     }
-    if (animal === "capy") return "Resting calmly"
-    if (animal === "dog") return "Sitting attentively"
-    if (animal === "bunny") return "Sitting cute & alert"
-    return "Sitting elegantly"
+
+    // Tier 3: Medium Energy (50 - 75%)
+    if (energy <= 75) {
+      if (currentState === "run") {
+        if (animal === "capy") return "Waddling calmly with yuzu 🍊"
+        if (animal === "dog") return "Trotting along runway 🐾"
+        if (animal === "bunny") return "Hopping along the runway 🐇"
+        return "Prowling along the bar 🐾"
+      }
+      if (animal === "capy") return "Resting calmly"
+      if (animal === "dog") return "Sitting attentively"
+      if (animal === "bunny") return "Sitting cute & alert"
+      return "Sitting comfortably"
+    }
+
+    // Tier 4: High Energy (75 - 100%)
+    if (currentState === "run") {
+      if (animal === "capy") return "Trotting energetically with yuzu! ⚡"
+      if (animal === "dog") return "Trotting briskly & full of energy! ⚡"
+      if (animal === "bunny") return "Brisk binkies & energetic hops! ⚡"
+      return "Prowling briskly & full of energy! ⚡"
+    }
+    if (animal === "capy") return "Quick breather, feeling great! ⚡"
+    if (animal === "dog") return "Perked up and ready to zoom! ⚡"
+    if (animal === "bunny") return "Wiggling nose with high energy! ⚡"
+    return "Sitting alert & full of pep! ⚡"
   }
 
   signal petInteraction(string type)
@@ -91,6 +137,7 @@ Item {
   function pet() {
     isSleeping = false
     isHappy = true
+    snackEnergyBonus = Math.min(80, snackEnergyBonus + 4)
     happyTimer.restart()
     playSound("purr")
     particleTrigger("♥", "#f54472")
@@ -103,12 +150,13 @@ Item {
     playSound("snack")
 
     if (snack === "favorite" || snack === "fish" || snack === "yuzu" || snack === "bone" || snack === "carrot") {
-      snackEnergyBonus = Math.min(30, snackEnergyBonus + 15)
+      snackEnergyBonus = Math.min(80, snackEnergyBonus + 15)
       isHappy = true
       happyTimer.restart()
       particleTrigger(favoriteSnack.icon, favoriteSnack.color)
       petInteraction(favoriteSnack.id)
     } else if (snack === "coffee") {
+      snackEnergyBonus = Math.min(80, snackEnergyBonus + 8)
       coffeeActive = true
       coffeeTimer.restart()
       isTyping = true
@@ -116,6 +164,7 @@ Item {
       particleTrigger("☕", "#e09050")
       petInteraction("coffee")
     } else if (snack === "milk") {
+      snackEnergyBonus = Math.min(80, snackEnergyBonus + 8)
       isSleeping = true
       sleepTimer.restart()
       particleTrigger("🥛", "#ffffff")
@@ -157,16 +206,22 @@ Item {
       currentState = "happy"
       return
     }
-    if (isSleeping) {
-      currentState = "sleep"
-      return
-    }
     if (coffeeActive) {
       currentState = "type"
       return
     }
     if (typingReactive && isTyping) {
       currentState = "type"
+      return
+    }
+    if (isSleeping) {
+      currentState = "sleep"
+      return
+    }
+    // Critical Exhausted Tier (10 - 25%): Full sit & sleep only.
+    // Even if music is playing or CPU load is high, pet sits quietly. Typing is handled above.
+    if (energy <= 25) {
+      currentState = "sit"
       return
     }
     if (audioReactive && isMusicPlaying) {
@@ -180,6 +235,13 @@ Item {
     currentState = isRoaming ? "run" : "sit"
   }
 
+  onEnergyChanged: {
+    if (energy <= 25) {
+      isRoaming = false
+    }
+    updateCurrentState()
+  }
+
   onIsHappyChanged: updateCurrentState()
   onIsSleepingChanged: updateCurrentState()
   onCoffeeActiveChanged: updateCurrentState()
@@ -188,15 +250,87 @@ Item {
   onIsHeavyLoadChanged: updateCurrentState()
   onIsRoamingChanged: updateCurrentState()
 
-  // Roaming & Rest Cycle Timer (Alternates roaming and sitting when idle)
+  // Roaming & Rest Cycle Timer (Scaled dynamically with 4 energy tiers)
   Timer {
     id: roamCycleTimer
-    interval: root.isRoaming ? 12000 : 6000
+    interval: 8000
     repeat: true
-    running: !root.isSleeping && !root.isMusicPlaying && !root.isTyping && !root.coffeeActive
+    running: !root.isSleeping && !root.isTyping && !root.coffeeActive && (root.energy <= 25 || !root.isMusicPlaying)
     onTriggered: {
-      root.isRoaming = !root.isRoaming
-      interval = root.isRoaming ? (10000 + Math.random() * 6000) : (5000 + Math.random() * 4000)
+      var e = root.energy // 10 - 100
+
+      // Tier 1: Exhausted / Critical (10 - 25%) -> Full sitting & sleeping only, no roaming
+      if (e <= 25) {
+        root.isRoaming = false
+        if (!root.isSleeping) {
+          // Fall asleep for an exhausted nap
+          root.isSleeping = true
+          sleepTimer.interval = 12000 + Math.random() * 4000 // 12s - 16s sleep
+          sleepTimer.restart()
+        }
+        // Sitting duration between naps: 8s - 12s
+        interval = 9000 + Math.random() * 3000
+        return
+      }
+
+      // Tier 2: Low Energy (25 - 50%) -> Sluggish, mostly sits/rests, short strolls, catnap chance
+      if (e <= 50) {
+        if (root.isRoaming) {
+          root.isRoaming = false
+          var restBaseLow = 12000 + Math.round((50 - e) * 240) // ~12s - 18s rest
+          interval = restBaseLow + Math.random() * 3000
+
+          // Spontaneous catnap chance while sitting (35%)
+          if (Math.random() < 0.35) {
+            root.isSleeping = true
+            sleepTimer.interval = 8000 + Math.round((50 - e) * 160)
+            sleepTimer.restart()
+          }
+        } else {
+          root.isRoaming = true
+          var roamBaseLow = 3500 + Math.round((e - 25) * 140) // ~3.5s - 7s roam
+          interval = roamBaseLow + Math.random() * 2000
+        }
+        return
+      }
+
+      // Tier 3: Medium Energy (50 - 75%) -> Balanced activity and rest
+      if (e <= 75) {
+        if (root.isRoaming) {
+          root.isRoaming = false
+          var restBaseMed = 6000 + Math.round((75 - e) * 120) // ~6s - 9s rest
+          interval = restBaseMed + Math.random() * 2000
+        } else {
+          root.isRoaming = true
+          var roamBaseMed = 8000 + Math.round((e - 50) * 200) // ~8s - 13s roam
+          interval = roamBaseMed + Math.random() * 2000
+        }
+        return
+      }
+
+      // Tier 4: High Energy (75 - 100%) -> Energetic, brisk, roams most of the time
+      if (root.isRoaming) {
+        root.isRoaming = false
+        var restBaseHigh = 3000 + Math.round((100 - e) * 80) // ~3s - 5s rest
+        interval = restBaseHigh + Math.random() * 1500
+      } else {
+        root.isRoaming = true
+        var roamBaseHigh = 14000 + Math.round((e - 75) * 280) // ~14s - 21s roam
+        interval = roamBaseHigh + Math.random() * 3000
+      }
+    }
+  }
+
+  // Energy Bonus Natural Decay Timer (Every 2 minutes, gradually digest / burn snack bonus)
+  Timer {
+    id: energyDecayTimer
+    interval: 120000 // 2 minutes
+    repeat: true
+    running: root.snackEnergyBonus > 0
+    onTriggered: {
+      if (root.snackEnergyBonus > 0) {
+        root.snackEnergyBonus = Math.max(0, root.snackEnergyBonus - 2)
+      }
     }
   }
 

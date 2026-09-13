@@ -14,8 +14,7 @@ echo "🐾 [1/5] Validating plugin against Omarchy manifest schema..."
 omarchy plugin validate "$SCRIPT_DIR"
 echo "  ✓ Manifest and entrypoints are valid."
 
-echo "🐾 [2/5] Ensuring assets are freshly generated..."
-python3 "$SCRIPT_DIR/scripts/generate_sprites.py"
+echo "🐾 [2/5] Ensuring sound assets are freshly generated..."
 python3 "$SCRIPT_DIR/scripts/generate_sounds.py"
 chmod +x "$SCRIPT_DIR/pet_watcher.py"
 
