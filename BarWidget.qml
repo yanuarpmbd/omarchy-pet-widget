@@ -169,8 +169,7 @@ BarWidget {
     if (petService.energy <= 25) tierStr = "Exhausted"
     else if (petService.energy <= 50) tierStr = "Low"
     else if (petService.energy <= 75) tierStr = "Medium"
-    s += "Energy: " + petService.energy + "% (" + tierStr + ")\n"
-    s += "Left-Click: Care Drawer | Middle-Click: Pet & Purr"
+    s += "Energy: " + petService.energy + "% (" + tierStr + ")"
     return s
   }
 
