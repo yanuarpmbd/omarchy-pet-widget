@@ -233,19 +233,28 @@ BarWidget {
   // Left boundary of the expand widget (<) / tray on the right
   readonly property real trayLeftEdge: windowWidth - Style.space(8) - rightModulesWidth
 
+  // Natural start position: pet is placed to the right of center modules
+  // Never allow petStartX to be evaluated as less than center of screen to prevent runaway feedback
+  readonly property real centerScreenX: windowWidth / 2
+  readonly property real maxAllowedAdaptiveGap: Math.max(Style.space(64), trayLeftEdge - centerScreenX - Style.space(32))
+
   // Our screen X position (starts right after omarchy.weather)
   readonly property real petStartX: {
     layoutWatcher.transform
-    if (!anchorWindow || !anchorWindow.contentItem) return (windowWidth / 2) + Style.space(150)
+    if (!anchorWindow || !anchorWindow.contentItem) return centerScreenX + Style.space(120)
     try {
       var pt = root.mapToItem(anchorWindow.contentItem, 0, 0)
-      if (pt && pt.x > 0) return pt.x
+      if (pt && pt.x > centerScreenX) return pt.x
     } catch (e) {}
-    return (windowWidth / 2) + Style.space(150)
+    return centerScreenX + Style.space(120)
   }
 
   // Available gap between weather right edge and tray left edge (<)
-  readonly property real dynamicAvailableGap: Math.max(Style.space(64), trayLeftEdge - petStartX - Style.space(10))
+  // Strictly bounded between a minimum of 64px and maxAllowedAdaptiveGap so it can NEVER overlap right modules
+  readonly property real dynamicAvailableGap: {
+    var rawGap = trayLeftEdge - petStartX - Style.space(8)
+    return Math.max(Style.space(64), Math.min(maxAllowedAdaptiveGap, rawGap))
+  }
 
   readonly property real targetRunwayWidth: {
     if (configuredRunwayMode === "compact") return Style.bar.iconSlot
@@ -261,10 +270,6 @@ BarWidget {
   implicitHeight: visible ? Style.bar.sizeHorizontal : 0
   width: implicitWidth
   height: implicitHeight
-
-  Behavior on implicitWidth {
-    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
-  }
 
   // ===========================================================================
   // ROAMING PHYSICS ALONG THE RUNWAY
