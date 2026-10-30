@@ -69,8 +69,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "sleep"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -117,8 +115,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "sit" || root.state === "type"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -172,8 +168,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "run" || root.state === "music" || root.state === "happy"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -331,8 +325,6 @@ Item {
           Shape {
             x: -34; y: -(root.state === "sleep" ? 8 : (root.state === "type" ? 6 : 5.5))
             width: 50; height: 32
-            layer.enabled: true
-            layer.samples: 4
 
             ShapePath {
               strokeColor: root.orangeColor
@@ -357,8 +349,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "run" || root.state === "music" || root.state === "sit" || root.state === "happy"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -399,8 +389,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "sleep"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -437,8 +425,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "type"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -568,8 +554,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "run" || root.state === "music" || root.state === "happy"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -603,8 +587,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "sit" || root.state === "type"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -641,8 +623,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "sleep"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -765,8 +745,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "run" || root.state === "music" || root.state === "happy"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -931,8 +909,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "sit" || root.state === "type"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -968,8 +944,6 @@ Item {
         Shape {
           anchors.fill: parent
           visible: root.state === "sleep"
-          layer.enabled: true
-          layer.samples: 4
 
           ShapePath {
             strokeColor: root.strokeColor
@@ -1015,8 +989,6 @@ Item {
     Shape {
       anchors.fill: parent
       visible: root.state === "music"
-      layer.enabled: true
-      layer.samples: 4
 
       // Arching Headband
       ShapePath {
@@ -1113,8 +1085,6 @@ Item {
       // Mini Glowing Laptop
       Shape {
         anchors.fill: parent
-        layer.enabled: true
-        layer.samples: 4
 
         ShapePath {
           strokeColor: root.strokeColor

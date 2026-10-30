@@ -34,6 +34,7 @@ Item {
   property bool coffeeActive: false
 
   // Energy calculation
+  readonly property bool onBattery: UPower.onBattery === true
   readonly property int batteryPercent: (UPower.displayDevice && UPower.displayDevice.ready && UPower.displayDevice.percentage >= 0)
     ? Math.round(UPower.displayDevice.percentage * 100)
     : 100
@@ -243,14 +244,22 @@ Item {
   }
 
   onIsHappyChanged: updateCurrentState()
-  onIsSleepingChanged: updateCurrentState()
+  onIsSleepingChanged: {
+    if (!isSleeping && audioReactive && energy > 25) checkAudioState()
+    updateCurrentState()
+  }
+  onAudioReactiveChanged: {
+    if (audioReactive && !isSleeping && energy > 25) checkAudioState()
+    else if (!audioReactive) isMusicPlaying = false
+    updateCurrentState()
+  }
   onCoffeeActiveChanged: updateCurrentState()
   onIsTypingChanged: updateCurrentState()
   onIsMusicPlayingChanged: updateCurrentState()
   onIsHeavyLoadChanged: updateCurrentState()
   onIsRoamingChanged: updateCurrentState()
 
-  // Roaming & Rest Cycle Timer (Scaled dynamically with 4 energy tiers)
+  // Roaming & Rest Cycle Timer (Scaled dynamically with 4 energy tiers & battery awareness)
   Timer {
     id: roamCycleTimer
     interval: 8000
@@ -258,6 +267,8 @@ Item {
     running: !root.isSleeping && !root.isTyping && !root.coffeeActive && (root.energy <= 25 || !root.isMusicPlaying)
     onTriggered: {
       var e = root.energy // 10 - 100
+      var batteryRestMult = root.onBattery ? 1.25 : 1.0
+      var batteryRoamMult = root.onBattery ? 0.85 : 1.0
 
       // Tier 1: Exhausted / Critical (10 - 25%) -> Full sitting & sleeping only, no roaming
       if (e <= 25) {
@@ -265,11 +276,11 @@ Item {
         if (!root.isSleeping) {
           // Fall asleep for an exhausted nap
           root.isSleeping = true
-          sleepTimer.interval = 12000 + Math.random() * 4000 // 12s - 16s sleep
+          sleepTimer.interval = (12000 + Math.random() * 4000) * batteryRestMult // 12s - 20s sleep
           sleepTimer.restart()
         }
         // Sitting duration between naps: 8s - 12s
-        interval = 9000 + Math.random() * 3000
+        interval = (9000 + Math.random() * 3000) * batteryRestMult
         return
       }
 
@@ -277,18 +288,18 @@ Item {
       if (e <= 50) {
         if (root.isRoaming) {
           root.isRoaming = false
-          var restBaseLow = 12000 + Math.round((50 - e) * 240) // ~12s - 18s rest
+          var restBaseLow = (12000 + Math.round((50 - e) * 240)) * batteryRestMult // ~12s - 22s rest
           interval = restBaseLow + Math.random() * 3000
 
           // Spontaneous catnap chance while sitting (35%)
           if (Math.random() < 0.35) {
             root.isSleeping = true
-            sleepTimer.interval = 8000 + Math.round((50 - e) * 160)
+            sleepTimer.interval = (8000 + Math.round((50 - e) * 160)) * batteryRestMult
             sleepTimer.restart()
           }
         } else {
           root.isRoaming = true
-          var roamBaseLow = 3500 + Math.round((e - 25) * 140) // ~3.5s - 7s roam
+          var roamBaseLow = (3500 + Math.round((e - 25) * 140)) * batteryRoamMult // ~3s - 7s roam
           interval = roamBaseLow + Math.random() * 2000
         }
         return
@@ -298,11 +309,11 @@ Item {
       if (e <= 75) {
         if (root.isRoaming) {
           root.isRoaming = false
-          var restBaseMed = 6000 + Math.round((75 - e) * 120) // ~6s - 9s rest
+          var restBaseMed = (6000 + Math.round((75 - e) * 120)) * batteryRestMult // ~6s - 11s rest
           interval = restBaseMed + Math.random() * 2000
         } else {
           root.isRoaming = true
-          var roamBaseMed = 8000 + Math.round((e - 50) * 200) // ~8s - 13s roam
+          var roamBaseMed = (8000 + Math.round((e - 50) * 200)) * batteryRoamMult // ~7s - 13s roam
           interval = roamBaseMed + Math.random() * 2000
         }
         return
@@ -311,11 +322,11 @@ Item {
       // Tier 4: High Energy (75 - 100%) -> Energetic, brisk, roams most of the time
       if (root.isRoaming) {
         root.isRoaming = false
-        var restBaseHigh = 3000 + Math.round((100 - e) * 80) // ~3s - 5s rest
+        var restBaseHigh = (3000 + Math.round((100 - e) * 80)) * batteryRestMult // ~3s - 6s rest
         interval = restBaseHigh + Math.random() * 1500
       } else {
         root.isRoaming = true
-        var roamBaseHigh = 14000 + Math.round((e - 75) * 280) // ~14s - 21s roam
+        var roamBaseHigh = (14000 + Math.round((e - 75) * 280)) * batteryRoamMult // ~12s - 21s roam
         interval = roamBaseHigh + Math.random() * 3000
       }
     }
@@ -427,9 +438,9 @@ Item {
 
   Timer {
     id: audioPollTimer
-    interval: 1000
+    interval: 2000 // 2s polling interval reduces MPRIS/Pipewire scans
     repeat: true
-    running: true
+    running: root.audioReactive && !root.isSleeping && (root.energy > 25)
     triggeredOnStart: true
     onTriggered: checkAudioState()
   }

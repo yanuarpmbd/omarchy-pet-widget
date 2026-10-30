@@ -71,12 +71,26 @@ BarWidget {
   readonly property bool popoutSwitchClosing: panelLoader.item ? panelLoader.item.popoutSwitchClosing === true : false
 
   function open() {
+    if (!panelLoader.active) {
+      panelLoader.active = true
+      Qt.callLater(function() {
+        if (panelLoader.item && panelLoader.item.open) panelLoader.item.open()
+      })
+      return
+    }
     if (panelLoader.item && panelLoader.item.open) panelLoader.item.open()
   }
   function close() {
     if (panelLoader.item && panelLoader.item.close) panelLoader.item.close()
   }
   function togglePanel() {
+    if (!panelLoader.active) {
+      panelLoader.active = true
+      Qt.callLater(function() {
+        if (panelLoader.item && panelLoader.item.open) panelLoader.item.open()
+      })
+      return
+    }
     if (panelLoader.item && panelLoader.item.toggle) panelLoader.item.toggle()
   }
   function closeForPopoutSwitch() {
@@ -110,7 +124,7 @@ BarWidget {
 
   Loader {
     id: panelLoader
-    active: true
+    active: false
     source: Qt.resolvedUrl("Panel.qml")
     visible: false
     onLoaded: {
@@ -205,6 +219,7 @@ BarWidget {
   }
 
   property var rightModulesItem: null
+  property int rightModulesRetries: 0
 
   function updateRightModulesRef() {
     if (!rightModulesItem) {
@@ -219,8 +234,11 @@ BarWidget {
   Timer {
     interval: 1000
     repeat: true
-    running: !root.rightModulesItem
-    onTriggered: updateRightModulesRef()
+    running: !root.rightModulesItem && root.rightModulesRetries < 10
+    onTriggered: {
+      root.rightModulesRetries++
+      updateRightModulesRef()
+    }
   }
 
   // Width of all right modules (tray, tailscale, audio, wifi, battery, etc.)
@@ -280,15 +298,18 @@ BarWidget {
 
   property real bunnyHopProgress: 0.0
 
-  // 60 FPS Roaming Movement Timer (Active during "run" and "music" when energy > 25%)
+  // Power-efficient Roaming Movement Timer (Adaptive ~30 FPS on AC, ~25 FPS on Battery)
+  readonly property int roamInterval: petService.onBattery ? 40 : 32
+
   Timer {
     id: roamTimer
-    interval: 16 // 60 FPS
-    running: petService.energy > 25 && (petService.currentState === "run" || petService.currentState === "music") && root.maxPetX > Style.space(8)
+    interval: root.roamInterval
+    running: !root.concealed && petService.energy > 25 && (petService.currentState === "run" || petService.currentState === "music") && root.maxPetX > Style.space(8)
     repeat: true
     onTriggered: {
-      var baseSpeed = petService.currentState === "music" ? 0.65 : 0.75
-      if (petService.coffeeActive) baseSpeed = 1.2
+      var dtFactor = root.roamInterval / 16.0
+      var baseSpeed = (petService.currentState === "music" ? 0.65 : 0.75) * dtFactor
+      if (petService.coffeeActive) baseSpeed = 1.2 * dtFactor
 
       // Tiered energy speed factor
       var e = petService.energy
@@ -309,7 +330,7 @@ BarWidget {
 
       // Bunny-specific hopping kinematics (pulsed leaps + ground pause)
       if (petService.animal === "bunny") {
-        root.bunnyHopProgress = (root.bunnyHopProgress + 0.0286) % 1.0
+        root.bunnyHopProgress = (root.bunnyHopProgress + (0.0286 * dtFactor)) % 1.0
         if (root.bunnyHopProgress <= 0.75) {
           var hopT = root.bunnyHopProgress / 0.75
           speed *= Math.sin(hopT * Math.PI) * 2.5
