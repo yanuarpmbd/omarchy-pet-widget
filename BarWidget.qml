@@ -58,12 +58,6 @@ BarWidget {
     soundEffects: root.configuredSoundEffects
     idleSleepTimeout: root.configuredIdleSleepTimeout
     cpuHighThreshold: root.configuredCpuHighThreshold
-
-    onParticleTrigger: function(symbol, particleColor) {
-      floatingParticle.text = symbol
-      floatingParticle.color = particleColor
-      particleAnim.restart()
-    }
   }
 
   // Panel coordination
@@ -99,11 +93,7 @@ BarWidget {
 
   // Omarchy bar click router delegates through triggerPress
   function triggerPress(b) {
-    if (b === Qt.MiddleButton) {
-      petService.pet()
-    } else {
-      root.togglePanel()
-    }
+    root.togglePanel()
   }
 
   readonly property real openPanelIndicatorWidth: Style.space(38)
@@ -140,8 +130,6 @@ BarWidget {
     function open(): void { root.open() }
     function close(): void { root.close() }
     function toggle(): void { root.togglePanel() }
-    function pet(): void { petService.pet() }
-    function feed(snack: string): void { petService.feed(snack) }
     function setName(name: string): void { root.setName(name) }
     function setAnimal(name: string): void { root.setAnimal(name) }
     function setSkin(name: string): void { root.setAnimal(name) }
@@ -309,7 +297,6 @@ BarWidget {
     onTriggered: {
       var dtFactor = root.roamInterval / 16.0
       var baseSpeed = (petService.currentState === "music" ? 0.65 : 0.75) * dtFactor
-      if (petService.coffeeActive) baseSpeed = 1.2 * dtFactor
 
       // Tiered energy speed factor
       var e = petService.energy
@@ -372,11 +359,7 @@ BarWidget {
     fixedHeight: root.height
 
     onPressed: function(b) {
-      if (b === Qt.MiddleButton) {
-        petService.pet()
-      } else {
-        root.togglePanel()
-      }
+      root.togglePanel()
     }
 
     // Runway Content inside WidgetButton
@@ -407,45 +390,6 @@ BarWidget {
         state: petService.currentState
         facingLeft: !root.facingRight
         strokeColor: root.bar ? root.bar.barForeground : Color.accent
-      }
-
-      // Floating Interaction Particle (Hearts ♥, Snacks, Notes)
-      Text {
-        id: floatingParticle
-        x: root.petX + (petSlotWidth / 2) - (implicitWidth / 2)
-        y: parent.height * 0.2
-        text: "♥"
-        font.pixelSize: Style.font.caption
-        opacity: 0.0
-
-        ParallelAnimation {
-          id: particleAnim
-          NumberAnimation {
-            target: floatingParticle
-            property: "y"
-            from: parent.height * 0.3
-            to: -Style.space(12)
-            duration: 900
-            easing.type: Easing.OutCubic
-          }
-          SequentialAnimation {
-            NumberAnimation {
-              target: floatingParticle
-              property: "opacity"
-              from: 0.0
-              to: 1.0
-              duration: 150
-            }
-            PauseAnimation { duration: 450 }
-            NumberAnimation {
-              target: floatingParticle
-              property: "opacity"
-              from: 1.0
-              to: 0.0
-              duration: 350
-            }
-          }
-        }
       }
     }
   }

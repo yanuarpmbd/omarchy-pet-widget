@@ -38,6 +38,5 @@ if command -v omarchy >/dev/null 2>&1; then
 fi
 
 echo "✨ Successfully installed ${PLUGIN_ID}!"
-echo "   - Left-click pet on the bar: Care Drawer"
-echo "   - Middle-click pet on the bar: Pet & Purr"
-echo "   - Keyboard shortcuts in drawer: [P] Pet, [F] Snack, [C] Coffee, [M] Milk, [1-4] Pets"
+echo "   - Click pet on the bar: Pet Drawer (Animals & Settings)"
+echo "   - Keyboard shortcuts in drawer: [1-4] Choose Pet, [N] Rename, [Esc] Close"

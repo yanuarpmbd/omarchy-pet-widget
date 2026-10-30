@@ -184,11 +184,7 @@ Panel {
         if (root.editingName) return
         if (!root.service) return
         var k = String(t).toLowerCase()
-        if (k === "p") { root.service.pet() }
-        else if (k === "f") { root.service.feed("favorite") }
-        else if (k === "c") { root.service.feed("coffee") }
-        else if (k === "m") { root.service.feed("milk") }
-        else if (k === "n" || k === "r") { root.startRename() }
+        if (k === "n" || k === "r") { root.startRename() }
         else if (k === "1") { root.selectAnimal("cat") }
         else if (k === "2") { root.selectAnimal("capy") }
         else if (k === "3") { root.selectAnimal("dog") }
@@ -229,14 +225,6 @@ Panel {
                 animal: root.service ? root.service.animal : "cat"
                 state: root.service ? root.service.currentState : "run"
                 strokeColor: Color.accent
-              }
-
-              MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                  if (root.service) root.service.pet()
-                }
               }
             }
 
@@ -436,114 +424,7 @@ Panel {
           }
         }
 
-        // 2. Care & Snacks Section (Adaptive to Active Animal!)
-        PanelSectionHeader {
-          width: parent.width
-          text: "Care & Snacks"
-        }
-
-        Row {
-          width: parent.width
-          spacing: Style.space(8)
-
-          // 💖 Pet
-          Button {
-            width: (parent.width - Style.space(24)) / 4
-            implicitHeight: Style.space(42)
-            bordered: true
-            onClicked: { if (root.service) root.service.pet() }
-
-            Column {
-              anchors.centerIn: parent
-              spacing: Style.space(1)
-              Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "💖"
-                font.pixelSize: Style.font.body
-              }
-              Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Pet [P]"
-                color: root.contentForeground
-                font.pixelSize: Style.font.caption
-              }
-            }
-          }
-
-          // 🐟 / 🍊 / 🦴 / 🥕 Favorite Snack (Adapts to animal)
-          Button {
-            width: (parent.width - Style.space(24)) / 4
-            implicitHeight: Style.space(42)
-            bordered: true
-            onClicked: { if (root.service) root.service.feed("favorite") }
-
-            Column {
-              anchors.centerIn: parent
-              spacing: Style.space(1)
-              Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: root.service ? root.service.favoriteSnack.icon : "🐟"
-                font.pixelSize: Style.font.body
-              }
-              Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: (root.service ? root.service.favoriteSnack.name : "Snack") + " [F]"
-                color: root.contentForeground
-                font.pixelSize: Style.font.caption
-              }
-            }
-          }
-
-          // ☕ Coffee (Hyper Zoomies)
-          Button {
-            width: (parent.width - Style.space(24)) / 4
-            implicitHeight: Style.space(42)
-            bordered: true
-            onClicked: { if (root.service) root.service.feed("coffee") }
-
-            Column {
-              anchors.centerIn: parent
-              spacing: Style.space(1)
-              Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "☕"
-                font.pixelSize: Style.font.body
-              }
-              Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Coffee [C]"
-                color: root.contentForeground
-                font.pixelSize: Style.font.caption
-              }
-            }
-          }
-
-          // 🥛 Milk (Nap Time)
-          Button {
-            width: (parent.width - Style.space(24)) / 4
-            implicitHeight: Style.space(42)
-            bordered: true
-            onClicked: { if (root.service) root.service.feed("milk") }
-
-            Column {
-              anchors.centerIn: parent
-              spacing: Style.space(1)
-              Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "🥛"
-                font.pixelSize: Style.font.body
-              }
-              Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Milk [M]"
-                color: root.contentForeground
-                font.pixelSize: Style.font.caption
-              }
-            }
-          }
-        }
-
-        // 3. Animal Switcher (4 Distinct Animals in Style 3)
+        // 2. Animal Switcher (4 Distinct Animals in Style 3)
         PanelSectionHeader {
           width: parent.width
           text: "Choose Pet (Style 3 Line Art)"
@@ -611,7 +492,7 @@ Panel {
           }
         }
 
-        // 4. Reactivity Settings
+        // 3. Reactivity Settings
         PanelSectionHeader {
           width: parent.width
           text: "Reactivity Settings"
@@ -644,7 +525,7 @@ Panel {
           Toggle {
             width: parent.width
             label: "Sound Effects"
-            description: "Subtle purr, snack eating, and click sound effects"
+            description: "Subtle click sound effects on interaction"
             checked: root.service ? root.service.soundEffects : true
             onClicked: {
               if (root.service) root.service.soundEffects = !root.service.soundEffects
@@ -652,10 +533,10 @@ Panel {
           }
         }
 
-        // 5. Footer Quick Shortcuts Bar
+        // 4. Footer Quick Shortcuts Bar
         BorderSurface {
           width: parent.width
-          implicitHeight: shortcutColumn.implicitHeight + Style.space(12)
+          implicitHeight: shortcutColumn.implicitHeight + Style.space(10)
           color: Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.03)
           borderSpec: Border.controlSpec("normal", root.contentForeground, Color.accent)
           radius: Style.cornerRadius
@@ -663,20 +544,12 @@ Panel {
           Column {
             id: shortcutColumn
             anchors.centerIn: parent
-            spacing: Style.space(3)
-
-            Text {
-              anchors.horizontalCenter: parent.horizontalCenter
-              text: "[P] Pet   •   [F] Snack   •   [C] Coffee   •   [M] Milk"
-              color: root.contentForeground
-              font.family: root.contentFontFamily
-              font.pixelSize: Style.font.caption
-            }
+            spacing: Style.space(2)
 
             Text {
               anchors.horizontalCenter: parent.horizontalCenter
               text: "[1-4] Choose Pet   •   [N] Rename   •   [Esc] Close"
-              color: root.dim
+              color: root.contentForeground
               font.family: root.contentFontFamily
               font.pixelSize: Style.font.caption
             }

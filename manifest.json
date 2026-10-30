@@ -5,7 +5,7 @@
   "version": "1.1.0",
   "author": "bol",
   "license": "MIT",
-  "description": "Minimalist vector animated desktop pet with 4 animals (Cat, Capybara, Shiba, Bunny) roaming on an adaptive status bar runway with music headphones, typing, and care interactions",
+  "description": "Minimalist vector animated desktop pet with 4 animals (Cat, Capybara, Shiba, Bunny) roaming on an adaptive status bar runway with music headphones, typing, and pure battery awareness",
   "kinds": [
     "bar-widget"
   ],
@@ -35,7 +35,7 @@
         "key": "petName",
         "type": "string",
         "label": "Pet Name",
-        "description": "Name shown in status tooltips and care drawer",
+        "description": "Name shown in status tooltips and settings drawer",
         "defaultValue": "Archie"
       },
       {
@@ -84,7 +84,7 @@
         "key": "soundEffects",
         "type": "boolean",
         "label": "Sound Effects",
-        "description": "Play subtle purr, snack, and click sounds on interaction",
+        "description": "Play subtle click sound effects on interaction",
         "defaultValue": true
       },
       {

@@ -30,34 +30,16 @@ Item {
   property bool isSleeping: false
   property bool isHeavyLoad: false
   property int cpuPercent: 0
-  property bool isHappy: false
-  property bool coffeeActive: false
 
-  // Energy calculation
+  // Energy calculation: purely 1:1 based on laptop battery percentage
   readonly property bool onBattery: UPower.onBattery === true
   readonly property int batteryPercent: (UPower.displayDevice && UPower.displayDevice.ready && UPower.displayDevice.percentage >= 0)
     ? Math.round(UPower.displayDevice.percentage * 100)
     : 100
-  property int snackEnergyBonus: 0
-  readonly property int energy: Math.min(100, Math.max(10, batteryPercent + snackEnergyBonus))
-
-  // Favorite snack metadata for active animal
-  readonly property var favoriteSnack: {
-    if (animal === "capy") return { id: "yuzu", name: "Yuzu", icon: "🍊", color: "#fab387" }
-    if (animal === "dog") return { id: "bone", name: "Bone", icon: "🦴", color: "#f9e2af" }
-    if (animal === "bunny") return { id: "carrot", name: "Carrot", icon: "🥕", color: "#fab387" }
-    return { id: "fish", name: "Fish", icon: "🐟", color: "#50c8ff" }
-  }
+  readonly property int energy: Math.min(100, Math.max(0, batteryPercent))
 
   // Mood description
   readonly property string moodText: {
-    if (isHappy) {
-      if (animal === "capy") return "Zen happiness ♥"
-      if (animal === "dog") return "Tail wagging excitedly! ♥"
-      if (animal === "bunny") return "Happy bunny binkies! ♥"
-      return "Purring happily ♥"
-    }
-    if (coffeeActive) return "Hyper caffeine zoomies! ⚡"
     if (isTyping && typingReactive) {
       if (energy <= 25) return "Tiredly coding on laptop... 💻🪫"
       if (energy <= 50) return "Coding steadily on laptop 💻"
@@ -123,54 +105,12 @@ Item {
     return "Sitting alert & full of pep! ⚡"
   }
 
-  signal petInteraction(string type)
-  signal particleTrigger(string symbol, color particleColor)
-
   // Sound player helper
   function playSound(name) {
     if (!root.soundEffects) return
     var resolved = Qt.resolvedUrl("assets/sounds/" + name + ".wav").toString()
     var path = resolved.indexOf("file://") === 0 ? resolved.substring(7) : resolved
     Quickshell.execDetached(["pw-play", path])
-  }
-
-  // Pet action (Left / Middle Click)
-  function pet() {
-    isSleeping = false
-    isHappy = true
-    snackEnergyBonus = Math.min(80, snackEnergyBonus + 4)
-    happyTimer.restart()
-    playSound("purr")
-    particleTrigger("♥", "#f54472")
-    petInteraction("pet")
-  }
-
-  // Feeding snacks
-  function feed(snack) {
-    isSleeping = false
-    playSound("snack")
-
-    if (snack === "favorite" || snack === "fish" || snack === "yuzu" || snack === "bone" || snack === "carrot") {
-      snackEnergyBonus = Math.min(80, snackEnergyBonus + 15)
-      isHappy = true
-      happyTimer.restart()
-      particleTrigger(favoriteSnack.icon, favoriteSnack.color)
-      petInteraction(favoriteSnack.id)
-    } else if (snack === "coffee") {
-      snackEnergyBonus = Math.min(80, snackEnergyBonus + 8)
-      coffeeActive = true
-      coffeeTimer.restart()
-      isTyping = true
-      typingDecayTimer.restart()
-      particleTrigger("☕", "#e09050")
-      petInteraction("coffee")
-    } else if (snack === "milk") {
-      snackEnergyBonus = Math.min(80, snackEnergyBonus + 8)
-      isSleeping = true
-      sleepTimer.restart()
-      particleTrigger("🥛", "#ffffff")
-      petInteraction("milk")
-    }
   }
 
   function setAnimal(newAnimal) {
@@ -203,14 +143,6 @@ Item {
 
   // Evaluate current state based on all system signals
   function updateCurrentState() {
-    if (isHappy) {
-      currentState = "happy"
-      return
-    }
-    if (coffeeActive) {
-      currentState = "type"
-      return
-    }
     if (typingReactive && isTyping) {
       currentState = "type"
       return
@@ -243,7 +175,6 @@ Item {
     updateCurrentState()
   }
 
-  onIsHappyChanged: updateCurrentState()
   onIsSleepingChanged: {
     if (!isSleeping && audioReactive && energy > 25) checkAudioState()
     updateCurrentState()
@@ -253,7 +184,6 @@ Item {
     else if (!audioReactive) isMusicPlaying = false
     updateCurrentState()
   }
-  onCoffeeActiveChanged: updateCurrentState()
   onIsTypingChanged: updateCurrentState()
   onIsMusicPlayingChanged: updateCurrentState()
   onIsHeavyLoadChanged: updateCurrentState()
@@ -264,7 +194,7 @@ Item {
     id: roamCycleTimer
     interval: 8000
     repeat: true
-    running: !root.isSleeping && !root.isTyping && !root.coffeeActive && (root.energy <= 25 || !root.isMusicPlaying)
+    running: !root.isSleeping && !root.isTyping && (root.energy <= 25 || !root.isMusicPlaying)
     onTriggered: {
       var e = root.energy // 10 - 100
       var batteryRestMult = root.onBattery ? 1.25 : 1.0
@@ -332,46 +262,12 @@ Item {
     }
   }
 
-  // Energy Bonus Natural Decay Timer (Every 2 minutes, gradually digest / burn snack bonus)
-  Timer {
-    id: energyDecayTimer
-    interval: 120000 // 2 minutes
-    repeat: true
-    running: root.snackEnergyBonus > 0
-    onTriggered: {
-      if (root.snackEnergyBonus > 0) {
-        root.snackEnergyBonus = Math.max(0, root.snackEnergyBonus - 2)
-      }
-    }
-  }
-
   // State Decay Timers
   Timer {
     id: typingDecayTimer
-    interval: root.coffeeActive ? 220 : 380
+    interval: 380
     repeat: false
     onTriggered: {
-      if (!root.coffeeActive) {
-        root.isTyping = false
-      }
-    }
-  }
-
-  Timer {
-    id: happyTimer
-    interval: 3500
-    repeat: false
-    onTriggered: {
-      root.isHappy = false
-    }
-  }
-
-  Timer {
-    id: coffeeTimer
-    interval: 10000
-    repeat: false
-    onTriggered: {
-      root.coffeeActive = false
       root.isTyping = false
     }
   }
